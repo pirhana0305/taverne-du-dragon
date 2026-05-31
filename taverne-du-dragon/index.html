@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taverne du Dragon — RPG Multijoueur</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --parch:#f5e6c8;--parch2:#ede0b8;--ink:#2a1a0a;--ink2:#4a3020;--ink3:#6a5040;
+  --blood:#8b1a1a;--gold:#c8920a;--gold2:#e8b52a;--stone:#3a2e22;--stone2:#1a1008;
+  --ember:#d4580a;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch);}
+.screen{display:none;height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+#screen-lobby{align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a1a08 0%,#0e0804 100%);position:relative;overflow:hidden;}
+#screen-lobby::before{content:'';position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(200,146,10,0.03) 40px,rgba(200,146,10,0.03) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(200,146,10,0.03) 40px,rgba(200,146,10,0.03) 41px);}
+.lobby-card{background:#1e1408;border:2px solid var(--gold);border-radius:8px;padding:40px;width:100%;max-width:480px;position:relative;z-index:1;box-shadow:0 0 60px rgba(200,146,10,0.15);}
+.lobby-title{font-family:'Cinzel',serif;font-size:28px;color:var(--gold2);text-align:center;letter-spacing:4px;margin-bottom:4px;text-shadow:0 0 30px rgba(232,181,42,0.4);}
+.lobby-sub{font-size:14px;color:var(--ink3);font-style:italic;text-align:center;margin-bottom:32px;}
+.lobby-sep{display:flex;align-items:center;gap:12px;margin:20px 0;font-family:'Cinzel',serif;font-size:10px;color:var(--ink3);letter-spacing:2px;}
+.lobby-sep::before,.lobby-sep::after{content:'';flex:1;height:1px;background:var(--ink2);}
+.field-label{font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;display:block;}
+.field-input{width:100%;background:#0e0904;border:1px solid var(--ink2);color:var(--parch);font-family:'Crimson Text',serif;font-size:15px;padding:10px 14px;border-radius:4px;outline:none;margin-bottom:14px;transition:border-color 0.2s;}
+.field-input:focus{border-color:var(--gold);}
+.field-input::placeholder{color:var(--ink3);font-style:italic;}
+.btn-primary{width:100%;background:var(--blood);border:2px solid #aa3a3a;color:var(--parch);font-family:'Cinzel',serif;font-size:13px;padding:12px;border-radius:4px;cursor:pointer;letter-spacing:2px;transition:all 0.2s;margin-bottom:10px;}
+.btn-primary:hover{background:#7a1010;letter-spacing:3px;}
+.btn-secondary{width:100%;background:transparent;border:1px solid var(--gold);color:var(--gold2);font-family:'Cinzel',serif;font-size:13px;padding:12px;border-radius:4px;cursor:pointer;letter-spacing:2px;transition:all 0.2s;}
+.btn-secondary:hover{background:rgba(200,146,10,0.1);}
+.session-code-display{background:#0e0904;border:2px solid var(--gold);border-radius:6px;padding:16px;text-align:center;margin:16px 0;}
+.session-code-val{font-family:'Cinzel',serif;font-size:32px;color:var(--gold2);letter-spacing:8px;text-shadow:0 0 20px rgba(232,181,42,0.5);}
+.session-code-hint{font-size:12px;color:var(--ink3);font-style:italic;margin-top:6px;}
+.players-waiting{margin:16px 0;}
+.player-waiting-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#1a1008;border:1px solid #3a2414;border-radius:4px;margin-bottom:6px;font-size:14px;}
+.player-waiting-item .dot{width:8px;height:8px;border-radius:50%;background:#2a8a2a;box-shadow:0 0 5px #2a8a2a;flex-shrink:0;}
+.player-waiting-item .role-badge{margin-left:auto;font-family:'Cinzel',serif;font-size:9px;color:var(--gold);border:1px solid var(--gold);padding:2px 8px;border-radius:3px;letter-spacing:1px;}
+#screen-create{align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a1a08 0%,#0e0804 100%);overflow-y:auto;padding:20px;}
+.create-card{background:#1e1408;border:2px solid var(--gold);border-radius:8px;padding:32px;max-width:560px;width:100%;}
+.create-title{font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);text-align:center;letter-spacing:3px;margin-bottom:4px;}
+.create-sub{font-size:13px;color:var(--ink3);font-style:italic;text-align:center;margin-bottom:24px;}
+.pick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.pick-option{background:var(--stone);border:1px solid #4a3020;border-radius:4px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.pick-option:hover{border-color:var(--gold);}
+.pick-option.selected{border-color:var(--gold2);background:#2a1a08;box-shadow:0 0 10px rgba(200,146,10,0.2);}
+.pick-emoji{font-size:22px;display:block;margin-bottom:3px;}
+.pick-name{font-family:'Cinzel',serif;font-size:9px;color:var(--gold2);letter-spacing:1px;}
+.pick-sub{font-size:10px;color:var(--ink3);font-style:italic;}
+.stats-roll-area{background:#0e0904;border:1px solid #3a2414;border-radius:4px;padding:14px;margin-bottom:18px;}
+.stats-roll-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.stat-roll-box{text-align:center;}
+.stat-roll-val{font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);font-weight:700;}
+.stat-roll-name{font-size:9px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;}
+.roll-dice-btn{background:var(--stone);border:1px solid var(--gold);color:var(--gold2);font-family:'Cinzel',serif;font-size:10px;padding:5px 14px;border-radius:3px;cursor:pointer;letter-spacing:1px;margin-top:10px;display:block;width:100%;transition:all 0.15s;}
+.roll-dice-btn:hover{background:#2a1a08;}
+#screen-game{background:var(--stone2);}
+.header{background:#1a0e06;border-bottom:2px solid var(--gold);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Cinzel',serif;font-size:18px;color:var(--gold2);letter-spacing:3px;text-shadow:0 0 20px rgba(200,146,10,0.4);}
+.logo span{color:var(--blood);}
+.header-right{display:flex;align-items:center;gap:12px;}
+.session-badge{background:var(--stone);border:1px solid var(--gold);color:var(--gold2);font-family:'Cinzel',serif;font-size:11px;padding:4px 10px;border-radius:3px;letter-spacing:1px;}
+.player-avatar-sm{width:28px;height:28px;border-radius:50%;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--stone);position:relative;}
+.player-avatar-sm .online-dot{position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#2a8a2a;border:1px solid var(--stone2);}
+.main-layout{display:grid;grid-template-columns:220px 1fr 190px;flex:1;min-height:0;overflow:hidden;}
+.sidebar-left{background:#1e140a;border-right:1px solid #3a2414;display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar-left::-webkit-scrollbar{width:3px;}
+.sidebar-left::-webkit-scrollbar-thumb{background:#3a2414;}
+.sidebar-section{border-bottom:1px solid #2a1a0a;padding:12px 14px;}
+.sidebar-title{font-family:'Cinzel',serif;font-size:9px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sidebar-title::after{content:'';flex:1;height:1px;background:var(--gold);opacity:0.3;}
+.char-avatar{width:56px;height:56px;border:2px solid var(--gold);border-radius:4px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--stone);}
+.char-name{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);text-align:center;margin-bottom:2px;}
+.char-class{font-size:11px;color:var(--ink3);text-align:center;font-style:italic;}
+.stat-bar-wrap{margin:6px 0;}
+.stat-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);margin-bottom:3px;font-family:'Cinzel',serif;letter-spacing:1px;}
+.stat-bar{height:5px;background:#2a1408;border-radius:3px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.hp-fill{background:var(--blood);}
+.mana-fill{background:#4a5aad;}
+.xp-fill{background:var(--gold);}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.stat-box{background:var(--stone);border:1px solid #3a2414;border-radius:3px;padding:5px 6px;text-align:center;}
+.stat-val{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold2);line-height:1;}
+.stat-mod{font-size:9px;color:var(--ember);font-family:'Cinzel',serif;}
+.stat-label{font-size:8px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.inv-item{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid #1a0e06;font-size:12px;color:var(--parch2);}
+.inv-icon{font-size:14px;}
+.inv-equip{margin-left:auto;font-size:8px;color:var(--gold);border:1px solid var(--gold);padding:1px 4px;border-radius:2px;font-family:'Cinzel',serif;letter-spacing:1px;}
+.narrative-zone{display:flex;flex-direction:column;background:#100c06;overflow:hidden;}
+.campaign-bar{background:#1a1006;border-bottom:1px solid #2a1a0a;padding:8px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.campaign-name{font-family:'Cinzel',serif;font-size:13px;color:var(--gold2);letter-spacing:1px;}
+.session-info{font-size:11px;color:var(--ink3);font-style:italic;}
+.story-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+.story-log::-webkit-scrollbar{width:4px;}
+.story-log::-webkit-scrollbar-track{background:#100c06;}
+.story-log::-webkit-scrollbar-thumb{background:#3a2414;border-radius:2px;}
+.msg-dm{background:linear-gradient(to right,#1e1408,#100c06);border-left:3px solid var(--gold);padding:12px 16px;border-radius:0 4px 4px 0;}
+.msg-dm::before{content:'⚔ MAÎTRE DU DONJON';font-family:'Cinzel',serif;font-size:8px;color:var(--gold);letter-spacing:2px;display:block;margin-bottom:8px;}
+.msg-dm p{font-size:14px;line-height:1.75;color:var(--parch);}
+.msg-dm em{color:var(--gold2);font-style:italic;}
+.msg-player{background:#1a1a2a;border-left:3px solid #6a6aad;padding:10px 16px;border-radius:0 4px 4px 0;}
+.msg-player-header{font-family:'Cinzel',serif;font-size:8px;color:#8a8acd;letter-spacing:2px;margin-bottom:5px;}
+.msg-player p{font-size:13px;color:#c8c8e8;line-height:1.6;}
+.msg-roll{background:#2a1e08;border:1px solid var(--gold);border-radius:4px;padding:10px 16px;display:flex;align-items:center;gap:12px;}
+.dice-icon{width:34px;height:34px;background:var(--stone);border:1px solid var(--gold);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.roll-result{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold2);}
+.roll-detail{font-size:11px;color:var(--ink3);font-style:italic;}
+.roll-outcome{margin-left:auto;font-family:'Cinzel',serif;font-size:11px;padding:3px 9px;border-radius:3px;}
+.roll-success{background:#1a3a1a;color:#5ada5a;border:1px solid #5ada5a;}
+.roll-fail{background:#3a1a1a;color:#da5a5a;border:1px solid #da5a5a;}
+.roll-crit{background:#3a2800;color:var(--gold2);border:1px solid var(--gold2);animation:glow 1s ease-in-out infinite alternate;}
+@keyframes glow{from{box-shadow:0 0 5px var(--gold);}to{box-shadow:0 0 15px var(--gold2);}}
+.msg-system{text-align:center;font-size:10px;color:var(--ink3);font-style:italic;font-family:'Cinzel',serif;letter-spacing:1px;}
+.typing-indicator{display:none;align-items:center;gap:6px;padding:6px 16px;font-size:11px;color:var(--gold);font-style:italic;font-family:'Cinzel',serif;flex-shrink:0;}
+.typing-indicator.active{display:flex;}
+.typing-dots span{display:inline-block;width:4px;height:4px;background:var(--gold);border-radius:50%;animation:dot-bounce 1.4s infinite ease-in-out;}
+.typing-dots span:nth-child(2){animation-delay:0.2s;}
+.typing-dots span:nth-child(3){animation-delay:0.4s;}
+@keyframes dot-bounce{0%,80%,100%{transform:scale(0.6);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
+.action-bar{background:#1a1006;border-top:1px solid #2a1a0a;padding:10px 14px;flex-shrink:0;}
+.dice-bar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.dice-btn{background:var(--stone);border:1px solid #4a3020;color:var(--parch2);font-family:'Cinzel',serif;font-size:10px;padding:4px 9px;border-radius:3px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;}
+.dice-btn:hover{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+.dice-btn.rolling{animation:dice-spin 0.3s ease;}
+@keyframes dice-spin{0%{transform:scale(1);}50%{transform:scale(1.2) rotate(10deg);}100%{transform:scale(1);}}
+.input-row{display:flex;gap:8px;}
+.action-input{flex:1;background:#0e0904;border:1px solid #3a2414;color:var(--parch);font-family:'Crimson Text',serif;font-size:14px;padding:8px 12px;border-radius:4px;outline:none;transition:border-color 0.2s;}
+.action-input::placeholder{color:var(--ink3);font-style:italic;}
+.action-input:focus{border-color:var(--gold);}
+.send-btn{background:var(--blood);border:1px solid #aa3a3a;color:var(--parch);font-family:'Cinzel',serif;font-size:10px;padding:8px 14px;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all 0.15s;white-space:nowrap;}
+.send-btn:hover{background:#7a1010;}
+.send-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.quick-actions{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.quick-btn{background:transparent;border:1px solid #2a1a0a;color:var(--ink3);font-family:'Crimson Text',serif;font-size:11px;padding:3px 9px;border-radius:3px;cursor:pointer;font-style:italic;transition:all 0.15s;}
+.quick-btn:hover{border-color:var(--gold);color:var(--gold2);}
+.sidebar-right{background:#1e140a;border-left:1px solid #3a2414;display:flex;flex-direction:column;overflow-y:auto;}
+.sidebar-right::-webkit-scrollbar{width:3px;}
+.sidebar-right::-webkit-scrollbar-thumb{background:#3a2414;}
+.mini-map{background:#0e0904;border:1px solid #3a2414;border-radius:3px;margin:0 12px 10px;position:relative;overflow:hidden;height:160px;}
+.map-room{position:absolute;background:#3a2414;border:1px solid #5a4424;}
+.map-room.current{background:var(--gold);border-color:var(--gold2);}
+.map-room.visited{background:#2a1a0a;border-color:#3a2414;}
+.map-room.unknown{background:#1a0e06;border-color:#2a1408;}
+.map-corridor{position:absolute;background:#2a1a0a;}
+.map-player{position:absolute;width:7px;height:7px;background:#ff4444;border-radius:50%;border:1px solid #ff8888;animation:player-pulse 1.5s ease-in-out infinite;}
+@keyframes player-pulse{0%,100%{box-shadow:0 0 3px #ff4444;}50%{box-shadow:0 0 8px #ff8888;}}
+.quest-item{padding:7px 0;border-bottom:1px solid #1a0e06;font-size:11px;}
+.quest-name{color:var(--parch2);margin-bottom:2px;display:flex;align-items:center;gap:5px;}
+.quest-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.quest-dot.main{background:var(--gold);}
+.quest-dot.side{background:#6a6aad;}
+.quest-dot.done{background:#3a8a3a;}
+.quest-desc{font-size:10px;color:var(--ink3);font-style:italic;padding-left:11px;}
+.online-player-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#1a1008;border:1px solid #2a1a0a;border-radius:3px;font-size:12px;margin-bottom:4px;}
+.online-player-item .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-green{background:#2a8a2a;box-shadow:0 0 4px #2a8a2a;}
+.dot-gold{background:var(--gold);box-shadow:0 0 4px var(--gold);}
+.class-tag{margin-left:auto;font-size:9px;color:var(--ink3);font-style:italic;}
+.toast{position:fixed;top:20px;right:20px;z-index:999;background:#1e1408;border:1px solid var(--gold);color:var(--parch2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity 0.3s;pointer-events:none;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- LOBBY -->
+<div id="screen-lobby" class="screen active">
+  <div class="lobby-card">
+    <div class="lobby-title">⚔ TAVERNE DU DRAGON</div>
+    <div class="lobby-sub">Jeu de rôle multijoueur — Propulsé par l'IA</div>
+    <label class="field-label">TON PSEUDO</label>
+    <input class="field-input" id="lobby-pseudo" type="text" placeholder="Ex : Aldric, Lyria, Karek..." />
+    <button class="btn-primary" onclick="showCreateSession()">CRÉER UNE PARTIE</button>
+    <div class="lobby-sep">OU</div>
+    <label class="field-label">CODE DE SESSION</label>
+    <input class="field-input" id="lobby-code" type="text" placeholder="Ex : DRAG42" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-family:'Cinzel',serif;" />
+    <button class="btn-secondary" onclick="joinSession()">REJOINDRE UNE PARTIE</button>
+    <div id="create-panel" style="display:none;margin-top:20px;">
+      <div class="session-code-display">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">CODE À PARTAGER</div>
+        <div class="session-code-val" id="display-code">—</div>
+        <div class="session-code-hint">Donne ce code à tes amis</div>
+      </div>
+      <div class="players-waiting" id="players-waiting-list"></div>
+      <button class="btn-primary" id="launch-btn" onclick="launchGame()" style="display:none;">LANCER LA CAMPAGNE →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CRÉATION -->
+<div id="screen-create" class="screen">
+  <div class="create-card" style="margin:auto;">
+    <div class="create-title">FORGE TON AVENTURIER</div>
+    <div class="create-sub" id="create-sub-text">—</div>
+    <label class="field-label">NOM DU PERSONNAGE</label>
+    <input class="field-input" id="char-name-input" type="text" placeholder="Ex : Aldric le Sombre..." />
+    <label class="field-label">RACE</label>
+    <div class="pick-grid" id="race-picker">
+      <div class="pick-option selected" data-val="Humain"><span class="pick-emoji">👤</span><div class="pick-name">HUMAIN</div><div class="pick-sub">Polyvalent</div></div>
+      <div class="pick-option" data-val="Elfe"><span class="pick-emoji">🧝</span><div class="pick-name">ELFE</div><div class="pick-sub">+DEX +SAG</div></div>
+      <div class="pick-option" data-val="Nain"><span class="pick-emoji">⛏️</span><div class="pick-name">NAIN</div><div class="pick-sub">+CON +FOR</div></div>
+      <div class="pick-option" data-val="Halfelin"><span class="pick-emoji">🍀</span><div class="pick-name">HALFELIN</div><div class="pick-sub">+DEX +CHA</div></div>
+      <div class="pick-option" data-val="Demi-Orc"><span class="pick-emoji">💀</span><div class="pick-name">DEMI-ORC</div><div class="pick-sub">+FOR +CON</div></div>
+      <div class="pick-option" data-val="Tieffelin"><span class="pick-emoji">😈</span><div class="pick-name">TIEFFELIN</div><div class="pick-sub">+INT +CHA</div></div>
+    </div>
+    <label class="field-label">CLASSE</label>
+    <div class="pick-grid" id="class-picker">
+      <div class="pick-option selected" data-val="Guerrier"><span class="pick-emoji">🗡️</span><div class="pick-name">GUERRIER</div><div class="pick-sub">Défenseur</div></div>
+      <div class="pick-option" data-val="Mage"><span class="pick-emoji">🔮</span><div class="pick-name">MAGE</div><div class="pick-sub">Arcanes</div></div>
+      <div class="pick-option" data-val="Rôdeur"><span class="pick-emoji">🏹</span><div class="pick-name">RÔDEUR</div><div class="pick-sub">Furtif</div></div>
+      <div class="pick-option" data-val="Clerc"><span class="pick-emoji">✨</span><div class="pick-name">CLERC</div><div class="pick-sub">Soins</div></div>
+      <div class="pick-option" data-val="Barde"><span class="pick-emoji">🎵</span><div class="pick-name">BARDE</div><div class="pick-sub">Enchanteur</div></div>
+      <div class="pick-option" data-val="Paladin"><span class="pick-emoji">🛡️</span><div class="pick-name">PALADIN</div><div class="pick-sub">Justice</div></div>
+    </div>
+    <div class="stats-roll-area">
+      <div class="stats-roll-row">
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-for">10</div><div class="stat-roll-name">FOR</div></div>
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-dex">10</div><div class="stat-roll-name">DEX</div></div>
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-con">10</div><div class="stat-roll-name">CON</div></div>
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-int">10</div><div class="stat-roll-name">INT</div></div>
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-sag">10</div><div class="stat-roll-name">SAG</div></div>
+        <div class="stat-roll-box"><div class="stat-roll-val" id="s-cha">10</div><div class="stat-roll-name">CHA</div></div>
+      </div>
+      <button class="roll-dice-btn" onclick="rollStats()">🎲 LANCER LES STATISTIQUES (4d6 drop 1)</button>
+    </div>
+    <button class="btn-primary" onclick="confirmChar()">PRÊT POUR L'AVENTURE →</button>
+  </div>
+</div>
+
+<!-- JEU -->
+<div id="screen-game" class="screen">
+  <div class="header">
+    <div class="logo">⚔ TAVERNE <span>DU</span> DRAGON</div>
+    <div class="header-right">
+      <div class="session-badge" id="header-code">—</div>
+      <div style="display:flex;gap:6px;" id="header-players"></div>
+    </div>
+  </div>
+  <div class="main-layout" style="flex:1;min-height:0;">
+    <div class="sidebar-left">
+      <div class="sidebar-section">
+        <div class="char-avatar" id="game-avatar">⚔️</div>
+        <div class="char-name" id="game-char-name">—</div>
+        <div class="char-class" id="game-char-class">—</div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Vitalité</div>
+        <div class="stat-bar-wrap"><div class="stat-bar-label"><span>PV</span><span id="hp-val">—</span></div><div class="stat-bar"><div class="stat-bar-fill hp-fill" id="hp-bar" style="width:100%"></div></div></div>
+        <div class="stat-bar-wrap"><div class="stat-bar-label"><span>Mana</span><span id="mana-val">—</span></div><div class="stat-bar"><div class="stat-bar-fill mana-fill" id="mana-bar" style="width:100%"></div></div></div>
+        <div class="stat-bar-wrap"><div class="stat-bar-label"><span>XP</span><span id="xp-val">0/100</span></div><div class="stat-bar"><div class="stat-bar-fill xp-fill" id="xp-bar" style="width:0%"></div></div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Attributs</div>
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-val" id="g-for">—</div><div class="stat-mod" id="g-for-m">—</div><div class="stat-label">FOR</div></div>
+          <div class="stat-box"><div class="stat-val" id="g-dex">—</div><div class="stat-mod" id="g-dex-m">—</div><div class="stat-label">DEX</div></div>
+          <div class="stat-box"><div class="stat-val" id="g-con">—</div><div class="stat-mod" id="g-con-m">—</div><div class="stat-label">CON</div></div>
+          <div class="stat-box"><div class="stat-val" id="g-int">—</div><div class="stat-mod" id="g-int-m">—</div><div class="stat-label">INT</div></div>
+          <div class="stat-box"><div class="stat-val" id="g-sag">—</div><div class="stat-mod" id="g-sag-m">—</div><div class="stat-label">SAG</div></div>
+          <div class="stat-box"><div class="stat-val" id="g-cha">—</div><div class="stat-mod" id="g-cha-m">—</div><div class="stat-label">CHA</div></div>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Équipement</div>
+        <div class="inv-item"><span class="inv-icon">⚔️</span>Épée longue<span class="inv-equip">ÉQUIPÉ</span></div>
+        <div class="inv-item"><span class="inv-icon">🛡️</span>Bouclier de bois</div>
+        <div class="inv-item"><span class="inv-icon">🧪</span>Potion de soin ×2</div>
+        <div class="inv-item"><span class="inv-icon">🕯️</span>Torche ×3</div>
+        <div class="inv-item"><span class="inv-icon">💰</span>15 pièces d'or</div>
+      </div>
+    </div>
+    <div class="narrative-zone">
+      <div class="campaign-bar">
+        <div><div class="campaign-name">Les Mines de Cendrefond</div><div class="session-info">Acte I — La Descente</div></div>
+      </div>
+      <div class="story-log" id="story-log"><div class="msg-system">— La campagne commence —</div></div>
+      <div class="typing-indicator" id="typing-indicator">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span>Le Maître du Donjon prépare la suite...</span>
+      </div>
+      <div class="action-bar">
+        <div class="dice-bar">
+          <button class="dice-btn" onclick="rollDiceBtn(4,this)">D4</button>
+          <button class="dice-btn" onclick="rollDiceBtn(6,this)">D6</button>
+          <button class="dice-btn" onclick="rollDiceBtn(8,this)">D8</button>
+          <button class="dice-btn" onclick="rollDiceBtn(10,this)">D10</button>
+          <button class="dice-btn" onclick="rollDiceBtn(12,this)">D12</button>
+          <button class="dice-btn" onclick="rollDiceBtn(20,this)">D20</button>
+          <button class="dice-btn" onclick="rollDiceBtn(100,this)">D100</button>
+        </div>
+        <div class="input-row">
+          <input class="action-input" id="action-input" type="text" placeholder="Que fait ton personnage ?" />
+          <button class="send-btn" id="send-btn" onclick="sendAction()">AGIR ⚔</button>
+        </div>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="setAction('J\'examine la pièce attentivement')">🔍 Explorer</button>
+          <button class="quick-btn" onclick="setAction('J\'attaque l\'ennemi avec mon arme')">⚔️ Attaquer</button>
+          <button class="quick-btn" onclick="setAction('J\'utilise une potion de soin')">🧪 Soigner</button>
+          <button class="quick-btn" onclick="setAction('Je tente de négocier')">💬 Parler</button>
+          <button class="quick-btn" onclick="setAction('Je me cache dans l\'ombre')">🌑 Cacher</button>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-right">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Mini-Carte</div>
+        <div class="mini-map" id="mini-map"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Joueurs en ligne</div>
+        <div id="online-players-list"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Quêtes</div>
+        <div class="quest-item"><div class="quest-name"><div class="quest-dot main"></div>Les Mines Perdues</div><div class="quest-desc">Trouver l'entrée des mines</div></div>
+        <div class="quest-item"><div class="quest-name"><div class="quest-dot side"></div>Le Marchand Disparu</div><div class="quest-desc">Retrouver Torven</div></div>
+        <div class="quest-item"><div class="quest-name"><div class="quest-dot done"></div>La Taverne</div><div class="quest-desc">Rassembler une équipe ✓</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Notes</div>
+        <textarea style="width:100%;background:#0e0904;border:1px solid #2a1a0a;color:var(--parch2);font-family:'Crimson Text',serif;font-size:11px;padding:7px;border-radius:3px;resize:none;outline:none;min-height:70px;" placeholder="Tes notes..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey:"AIzaSyBjU4Bq_IlmROaNMzBKbQSMbgBw_-XYBgA",
+  authDomain:"jeux-a50a5.firebaseapp.com",
+  databaseURL:"https://jeux-a50a5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"jeux-a50a5",
+  storageBucket:"jeux-a50a5.firebasestorage.app",
+  messagingSenderId:"671806474183",
+  appId:"1:671806474183:web:b899bcb7ad95a73cb4bbe2"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let myPseudo='',myCharData={},sessionCode='',isHost=false;
+let selectedRace='Humain',selectedClass='Guerrier';
+let hp=10,hpMax=10,mana=8,manaMax=8,xp=0;
+let chatHistory=[];
+let sessionRef=null,playersRef=null,messagesRef=null;
+let seenKeys=new Set();
+const AVATARS={Guerrier:'🗡️',Mage:'🔮','Rôdeur':'🏹',Clerc:'✨',Barde:'🎵',Paladin:'🛡️'};
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+function generateCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+
+async function showCreateSession(){
+  myPseudo=document.getElementById('lobby-pseudo').value.trim();
+  if(!myPseudo){showToast('Entre ton pseudo !');return;}
+  sessionCode=generateCode();isHost=true;
+  document.getElementById('display-code').textContent=sessionCode;
+  document.getElementById('create-panel').style.display='block';
+  sessionRef=db.ref('sessions/'+sessionCode);
+  playersRef=sessionRef.child('players');
+  messagesRef=sessionRef.child('messages');
+  await sessionRef.set({host:myPseudo,status:'waiting',created:Date.now()});
+  await playersRef.child(myPseudo).set({pseudo:myPseudo,status:'waiting',ready:false});
+  playersRef.on('value',snap=>{
+    const players=snap.val()||{};
+    renderWaitingPlayers(players);
+    document.getElementById('launch-btn').style.display=Object.keys(players).length>=1?'block':'none';
+  });
+}
+
+function renderWaitingPlayers(players){
+  const list=document.getElementById('players-waiting-list');list.innerHTML='';
+  Object.values(players).forEach(p=>{
+    const div=document.createElement('div');div.className='player-waiting-item';
+    div.innerHTML=`<div class="dot"></div><span>${p.pseudo}</span><span class="role-badge">${p.ready?'PRÊT':'EN ATTENTE'}</span>`;
+    list.appendChild(div);
+  });
+}
+
+async function joinSession(){
+  myPseudo=document.getElementById('lobby-pseudo').value.trim();
+  const code=document.getElementById('lobby-code').value.trim().toUpperCase();
+  if(!myPseudo){showToast('Entre ton pseudo !');return;}
+  if(!code){showToast('Entre un code !');return;}
+  const snap=await db.ref('sessions/'+code).once('value');
+  if(!snap.exists()){showToast('Session introuvable !');return;}
+  sessionCode=code;isHost=false;
+  sessionRef=db.ref('sessions/'+sessionCode);
+  playersRef=sessionRef.child('players');
+  messagesRef=sessionRef.child('messages');
+  await playersRef.child(myPseudo).set({pseudo:myPseudo,status:'waiting',ready:false});
+  showCreateScreen();
+}
+
+function launchGame(){sessionRef.update({status:'started'});showCreateScreen();}
+
+function showCreateScreen(){
+  document.getElementById('screen-lobby').classList.remove('active');
+  document.getElementById('screen-create').classList.add('active');
+  document.getElementById('create-sub-text').textContent=`Session : ${sessionCode} — Crée ton personnage`;
+  setupPickers();
+}
+
+function rollStat(){const r=[0,0,0,0].map(()=>Math.ceil(Math.random()*6));r.sort((a,b)=>a-b);return r.slice(1).reduce((s,v)=>s+v,0);}
+
+function rollStats(){
+  const keys=['for','dex','con','int','sag','cha'];
+  const vals=keys.map(()=>rollStat());
+  keys.forEach((k,i)=>{document.getElementById('s-'+k).textContent=vals[i];});
+  myCharData.stats={FOR:vals[0],DEX:vals[1],CON:vals[2],INT:vals[3],SAG:vals[4],CHA:vals[5]};
+}
+
+function setupPickers(){
+  document.getElementById('race-picker').querySelectorAll('.pick-option').forEach(opt=>{
+    opt.addEventListener('click',()=>{document.getElementById('race-picker').querySelectorAll('.pick-option').forEach(o=>o.classList.remove('selected'));opt.classList.add('selected');selectedRace=opt.dataset.val;});
+  });
+  document.getElementById('class-picker').querySelectorAll('.pick-option').forEach(opt=>{
+    opt.addEventListener('click',()=>{document.getElementById('class-picker').querySelectorAll('.pick-option').forEach(o=>o.classList.remove('selected'));opt.classList.add('selected');selectedClass=opt.dataset.val;});
+  });
+}
+
+function getMod(v){const m=Math.floor((v-10)/2);return(m>=0?'+':'')+m;}
+
+async function confirmChar(){
+  const name=document.getElementById('char-name-input').value.trim()||myPseudo;
+  if(!myCharData.stats)rollStats();
+  myCharData={...myCharData,name,race:selectedRace,classe:selectedClass,pseudo:myPseudo};
+  const conMod=Math.floor((myCharData.stats.CON-10)/2);
+  hpMax=10+conMod;hp=hpMax;
+  manaMax=myCharData.classe==='Mage'?14:myCharData.classe==='Clerc'?10:6;mana=manaMax;
+  await playersRef.child(myPseudo).update({...myCharData,ready:true,hp,hpMax,mana,manaMax});
+  startGame();
+}
+
+function startGame(){
+  document.getElementById('screen-create').classList.remove('active');
+  document.getElementById('screen-game').classList.add('active');
+  document.getElementById('header-code').textContent='SESSION : '+sessionCode;
+  document.getElementById('game-avatar').textContent=AVATARS[myCharData.classe]||'⚔️';
+  document.getElementById('game-char-name').textContent=myCharData.name;
+  document.getElementById('game-char-class').textContent=myCharData.race+' · '+myCharData.classe;
+  const sk=['FOR','DEX','CON','INT','SAG','CHA'],si=['for','dex','con','int','sag','cha'];
+  sk.forEach((k,i)=>{document.getElementById('g-'+si[i]).textContent=myCharData.stats[k];document.getElementById('g-'+si[i]+'-m').textContent=getMod(myCharData.stats[k]);});
+  updateBars();buildMiniMap();
+  messagesRef.on('child_added',snap=>{
+    if(seenKeys.has(snap.key))return;
+    seenKeys.add(snap.key);
+    renderMessage(snap.val());
+  });
+  playersRef.on('value',snap=>{renderOnlinePlayers(snap.val()||{});renderHeaderPlayers(snap.val()||{});});
+  if(isHost)setTimeout(()=>dmIntro(),800);
+  document.getElementById('action-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAction();}});
+}
+
+function updateBars(){
+  document.getElementById('hp-val').textContent=hp+'/'+hpMax;
+  document.getElementById('mana-val').textContent=mana+'/'+manaMax;
+  document.getElementById('xp-val').textContent=xp+'/100';
+  document.getElementById('hp-bar').style.width=Math.round(hp/hpMax*100)+'%';
+  document.getElementById('mana-bar').style.width=Math.round(mana/manaMax*100)+'%';
+  document.getElementById('xp-bar').style.width=Math.round(xp/100*100)+'%';
+}
+
+function buildMiniMap(){
+  const map=document.getElementById('mini-map');map.innerHTML='';
+  [{x:100,y:72,w:10,h:5},{x:45,y:72,w:15,h:5},{x:75,y:90,w:10,h:10},{x:145,y:80,w:5,h:20},{x:75,y:40,w:10,h:20}]
+    .forEach(c=>{const el=document.createElement('div');el.className='map-corridor';el.style.cssText=`left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;`;map.appendChild(el);});
+  [{x:60,y:60,w:40,h:30,cls:'current'},{x:110,y:55,w:35,h:35,cls:'visited'},{x:10,y:55,w:35,h:35,cls:'visited'},{x:60,y:100,w:40,h:30,cls:'visited'},{x:115,y:100,w:35,h:25,cls:'unknown'},{x:60,y:10,w:40,h:30,cls:'unknown'}]
+    .forEach(r=>{const el=document.createElement('div');el.className='map-room '+r.cls;el.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;`;map.appendChild(el);});
+  const p=document.createElement('div');p.className='map-player';p.style.cssText='left:75px;top:68px;';map.appendChild(p);
+}
+
+function renderOnlinePlayers(players){
+  const list=document.getElementById('online-players-list');list.innerHTML='';
+  Object.values(players).forEach(p=>{
+    const div=document.createElement('div');div.className='online-player-item';
+    div.innerHTML=`<div class="dot ${p.pseudo===myPseudo?'dot-green':'dot-gold'}"></div><span>${p.name||p.pseudo}</span><span class="class-tag">${p.classe||'?'}</span>`;
+    list.appendChild(div);
+  });
+}
+
+function renderHeaderPlayers(players){
+  const c=document.getElementById('header-players');c.innerHTML='';
+  Object.values(players).forEach(p=>{
+    const div=document.createElement('div');div.className='player-avatar-sm';
+    div.title=(p.name||p.pseudo)+' — '+(p.classe||'?');
+    div.innerHTML=(AVATARS[p.classe]||'👤')+'<div class="online-dot"></div>';
+    c.appendChild(div);
+  });
+}
+
+function renderMessage(msg){
+  const log=document.getElementById('story-log');
+  const div=document.createElement('div');div.className='msg';
+  if(msg.type==='dm'){
+    div.innerHTML=`<div class="msg-dm"><p>${msg.text}</p></div>`;
+  }else if(msg.type==='player'){
+    div.innerHTML=`<div class="msg-player"><div class="msg-player-header">⚔ ${(msg.author||'?').toUpperCase()}</div><p>${msg.text}</p></div>`;
+  }else if(msg.type==='roll'){
+    const oc=msg.outcome==='crit'?'roll-crit':msg.outcome==='success'?'roll-success':msg.outcome==='fail'?'roll-fail':'';
+    const ol=msg.outcome==='crit'?'⭐ CRITIQUE !':msg.outcome==='success'?'✓ SUCCÈS':msg.outcome==='fail'?'✗ ÉCHEC':'';
+    div.innerHTML=`<div class="msg-roll"><div class="dice-icon">🎲</div><div><div class="roll-result">${msg.result}</div><div class="roll-detail">${msg.author} — D${msg.dice}</div></div>${oc?`<div class="roll-outcome ${oc}">${ol}</div>`:''}</div>`;
+  }else if(msg.type==='system'){
+    div.innerHTML=`<div class="msg-system">${msg.text}</div>`;
+  }
+  log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+
+function rollDiceBtn(sides,btn){
+  btn.classList.add('rolling');setTimeout(()=>btn.classList.remove('rolling'),300);
+  const result=Math.ceil(Math.random()*sides);
+  let outcome='';
+  if(sides===20){outcome=result===20?'crit':result===1?'fail':result>=10?'success':'fail';}
+  messagesRef.push({type:'roll',dice:sides,result,outcome,author:myCharData.name||myPseudo,ts:Date.now()});
+}
+
+function setAction(text){document.getElementById('action-input').value=text;document.getElementById('action-input').focus();}
+
+async function sendAction(){
+  const input=document.getElementById('action-input');
+  const action=input.value.trim();if(!action)return;
+  input.value='';document.getElementById('send-btn').disabled=true;
+  await messagesRef.push({type:'player',text:action,author:myCharData.name||myPseudo,ts:Date.now()});
+  chatHistory.push({role:'user',content:`${myCharData.name||myPseudo} (${myCharData.race} ${myCharData.classe}): ${action}`});
+  if(isHost)await dmRespond(action);
+  document.getElementById('send-btn').disabled=false;
+}
+
+async function dmRespond(playerAction){
+  const typing=document.getElementById('typing-indicator');typing.classList.add('active');
+  const snap=await playersRef.once('value');
+  const players=snap.val()||{};
+  const partyDesc=Object.values(players).map(p=>`${p.name||p.pseudo} (${p.race||'?'} ${p.classe||'?'})`).join(', ');
+  const systemPrompt=`Tu es le Maître du Donjon d'une partie D&D en français. Campagne : "Les Mines de Cendrefond". Groupe : ${partyDesc}. Narrer en 2-4 phrases vivantes. Si une action demande un jet, l'indiquer. Ton épique médiéval-fantastique. Uniquement la narration, sans méta-commentaires.`;
+  try{
+    const response=await fetch('/.netlify/functions/dm',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({systemPrompt,messages:chatHistory})
+    });
+    const data=await response.json();
+    const reply=data.reply||"Le Maître du Donjon hésite...";
+    chatHistory.push({role:'assistant',content:reply});
+    typing.classList.remove('active');
+    await messagesRef.push({type:'dm',text:reply,ts:Date.now()});
+    xp=Math.min(100,xp+Math.floor(Math.random()*6)+2);updateBars();
+  }catch(e){
+    typing.classList.remove('active');
+    await messagesRef.push({type:'dm',text:"Les brumes du donjon obscurcissent la vision... <em>(Erreur — réessaie)</em>",ts:Date.now()});
+  }
+}
+
+async function dmIntro(){
+  const snap=await playersRef.once('value');
+  const players=snap.val()||{};
+  const partyDesc=Object.values(players).map(p=>`${p.name||p.pseudo} le/la ${p.race||'?'} ${p.classe||'?'}`).join(', ');
+  const typing=document.getElementById('typing-indicator');typing.classList.add('active');
+  const systemPrompt=`Tu es le Maître du Donjon d'une partie D&D en français. Écris une introduction épique en 3-4 phrases pour "Les Mines de Cendrefond". Groupe : ${partyDesc}. Plante le décor devant les mines, mission : retrouver le marchand Torven disparu. Termine par une situation qui appelle à l'action.`;
+  try{
+    const response=await fetch('/.netlify/functions/dm',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({systemPrompt,messages:[{role:'user',content:'Commence la campagne.'}]})
+    });
+    const data=await response.json();
+    const reply=data.reply||"L'aventure commence...";
+    chatHistory.push({role:'assistant',content:reply});
+    typing.classList.remove('active');
+    await messagesRef.push({type:'dm',text:reply,ts:Date.now()});
+  }catch(e){
+    typing.classList.remove('active');
+    await messagesRef.push({type:'dm',text:"La torche vacille. Devant vous s'ouvre l'entrée des <em>Mines de Cendrefond</em>. Quelque part dans ces profondeurs se trouve Torven le marchand, disparu depuis trois jours. <em>Que faites-vous ?</em>",ts:Date.now()});
+  }
+}
+
+rollStats();
+</script>
+</body>
+</html>
