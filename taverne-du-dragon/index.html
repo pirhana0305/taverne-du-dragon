@@ -387,6 +387,7 @@ async function showCreateSession(){
   sessionCode=generateCode();isHost=true;
   document.getElementById('display-code').textContent=sessionCode;
   document.getElementById('create-panel').style.display='block';
+  document.getElementById('launch-btn').style.display='block';
   sessionRef=db.ref('sessions/'+sessionCode);
   playersRef=sessionRef.child('players');
   messagesRef=sessionRef.child('messages');
