@@ -159,6 +159,22 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
 .dot-green{background:#2a8a2a;box-shadow:0 0 4px #2a8a2a;}
 .dot-gold{background:var(--gold);box-shadow:0 0 4px var(--gold);}
 .class-tag{margin-left:auto;font-size:9px;color:var(--ink3);font-style:italic;}
+.voice-ctrl-btn{background:var(--stone);border:1px solid #4a3020;color:var(--parch2);font-size:12px;padding:4px 8px;border-radius:4px;cursor:pointer;transition:all 0.2s;font-family:'Cinzel',serif;letter-spacing:1px;}
+.voice-ctrl-btn:hover{border-color:var(--gold);color:var(--gold2);}
+.voice-ctrl-btn.active{background:#2a1a40;border-color:#8a6acd;}
+.voice-ctrl-btn.speaking{background:#1a2a1a;border-color:#4a8a4a;animation:pulse-green 1s infinite;}
+.voice-ctrl-btn.recording{background:#3a1a1a;border-color:var(--blood);animation:pulse-red 1s infinite;}
+.voice-label{font-size:10px;max-width:110px;}
+@keyframes pulse-green{0%,100%{box-shadow:0 0 5px #4a8a4a;}50%{box-shadow:0 0 12px #5ada5a;}}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 5px var(--blood);}50%{box-shadow:0 0 12px #ff4444;}}
+.voice-status{display:none;align-items:center;gap:8px;padding:6px 16px;font-size:11px;font-style:italic;font-family:'Cinzel',serif;flex-shrink:0;}
+.voice-status.listening-show{display:flex;color:#ff6a6a;background:#1a0808;}
+.voice-status.speaking-show{display:flex;color:#6ada6a;background:#081a08;}
+.voice-dots span{display:inline-block;width:4px;height:4px;border-radius:50%;animation:dot-bounce 1.4s infinite ease-in-out;}
+.voice-dots span:nth-child(2){animation-delay:0.2s;}
+.voice-dots span:nth-child(3){animation-delay:0.4s;}
+.voice-status.listening-show .voice-dots span{background:#ff6a6a;}
+.voice-status.speaking-show .voice-dots span{background:#6ada6a;}
 .toast{position:fixed;top:20px;right:20px;z-index:999;background:#1e1408;border:1px solid var(--gold);color:var(--parch2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity 0.3s;pointer-events:none;}
 .toast.show{opacity:1;}
 </style>
@@ -236,6 +252,9 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
     <div class="logo">⚔ TAVERNE <span>DU</span> DRAGON</div>
     <div class="header-right">
       <div class="session-badge" id="header-code">—</div>
+      <button class="voice-ctrl-btn" id="tts-toggle-btn" onclick="toggleTTS()" title="Activer la voix">🔇</button>
+      <button class="voice-ctrl-btn voice-label" id="voice-label-btn" onclick="cycleVoice()" title="Changer de voix">🧙 Conteur grave</button>
+      <button class="voice-ctrl-btn" id="mic-btn" onclick="toggleMic()" title="Parler au MJ">🎤</button>
       <div style="display:flex;gap:6px;" id="header-players"></div>
     </div>
   </div>
@@ -277,6 +296,10 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
         <div><div class="campaign-name">Les Mines de Cendrefond</div><div class="session-info">Acte I — La Descente</div></div>
       </div>
       <div class="story-log" id="story-log"><div class="msg-system">— La campagne commence —</div></div>
+      <div class="voice-status" id="voice-status-bar">
+        <div class="voice-dots"><span></span><span></span><span></span></div>
+        <span id="voice-status-text">...</span>
+      </div>
       <div class="typing-indicator" id="typing-indicator">
         <div class="typing-dots"><span></span><span></span><span></span></div>
         <span>Le Maître du Donjon prépare la suite...</span>
@@ -553,6 +576,88 @@ async function dmRespond(playerAction){
     await messagesRef.push({type:'dm',text:"Les brumes du donjon obscurcissent la vision... <em>(Erreur — réessaie)</em>",ts:Date.now()});
   }
 }
+
+
+// ===== VOCAL =====
+let ttsEnabled = false;
+let selectedVoiceName = '';
+let recognition = null;
+let isListening = false;
+const synth = window.speechSynthesis;
+
+const VOICE_PRESETS = [
+  { label: '🧙 Conteur grave', lang: 'fr', gender: 'male', rate: 0.85, pitch: 0.7 },
+  { label: '⚔️ Guerrier neutre', lang: 'fr', gender: null, rate: 1.0, pitch: 1.0 },
+  { label: '🌙 Voix mystique', lang: 'fr', gender: null, rate: 0.75, pitch: 0.5 },
+];
+let currentPreset = 0;
+
+function getVoice(preset) {
+  const voices = synth.getVoices();
+  const fr = voices.filter(v => v.lang.startsWith('fr'));
+  if (preset.gender === 'male') {
+    return fr.find(v => v.name.toLowerCase().includes('thomas') || v.name.toLowerCase().includes('pierre') || v.name.toLowerCase().includes('male')) || fr[0] || voices[0];
+  }
+  return fr[Math.floor(Math.random() * Math.max(1, Math.min(fr.length, 2 + preset.pitch))] || fr[0] || voices[0];
+}
+
+function speak(text) {
+  if (!ttsEnabled) return;
+  synth.cancel();
+  const clean = text.replace(/<[^>]*>/g, '').replace(/\*/g, '');
+  const utt = new SpeechSynthesisUtterance(clean);
+  const preset = VOICE_PRESETS[currentPreset];
+  utt.lang = 'fr-FR';
+  utt.rate = preset.rate;
+  utt.pitch = preset.pitch;
+  const v = getVoice(preset);
+  if (v) utt.voice = v;
+  utt.onstart = () => { document.getElementById('tts-toggle-btn').classList.add('speaking'); showVoiceStatus('speaking', 'Le Maître du Donjon parle...'); };
+  utt.onend = () => { document.getElementById('tts-toggle-btn').classList.remove('speaking'); hideVoiceStatus(); };
+  synth.speak(utt);
+}
+
+function toggleTTS() {
+  ttsEnabled = !ttsEnabled;
+  const btn = document.getElementById('tts-toggle-btn');
+  btn.textContent = ttsEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('active', ttsEnabled);
+  showToast(ttsEnabled ? '🔊 Voix activée' : '🔇 Voix désactivée');
+  if (!ttsEnabled) synth.cancel();
+}
+
+function cycleVoice() {
+  currentPreset = (currentPreset + 1) % VOICE_PRESETS.length;
+  const preset = VOICE_PRESETS[currentPreset];
+  document.getElementById('voice-label-btn').textContent = preset.label;
+  showToast('Voix : ' + preset.label);
+  if (ttsEnabled) speak('Voici ma nouvelle voix, aventurier.');
+}
+
+function toggleMic() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { showToast('Micro non supporté (utilise Chrome)'); return; }
+  if (isListening) stopListening(); else startListening();
+}
+
+function startListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'fr-FR'; recognition.continuous = false; recognition.interimResults = true;
+  recognition.onstart = () => { isListening = true; document.getElementById('mic-btn').classList.add('recording'); document.getElementById('mic-btn').textContent = '⏹'; document.getElementById('action-input').placeholder = '🎤 Je t\'écoute...'; showVoiceStatus('listening', 'Écoute en cours...'); };
+  recognition.onresult = (e) => { let f='',i=''; for(let x=e.resultIndex;x<e.results.length;x++){if(e.results[x].isFinal)f+=e.results[x][0].transcript;else i+=e.results[x][0].transcript;} document.getElementById('action-input').value=f||i; };
+  recognition.onend = () => { stopListening(); const v=document.getElementById('action-input').value.trim(); if(v)sendAction(); };
+  recognition.onerror = () => stopListening();
+  recognition.start();
+}
+
+function stopListening() {
+  isListening = false; if(recognition)recognition.stop();
+  document.getElementById('mic-btn').classList.remove('recording'); document.getElementById('mic-btn').textContent = '🎤';
+  document.getElementById('action-input').placeholder = 'Que fait ton personnage ? (ou parle 🎤)'; hideVoiceStatus();
+}
+
+function showVoiceStatus(type, text) { const b=document.getElementById('voice-status-bar'),t=document.getElementById('voice-status-text'); b.className='voice-status '+(type==='listening'?'listening-show':'speaking-show'); t.textContent=text; }
+function hideVoiceStatus() { document.getElementById('voice-status-bar').className='voice-status'; }
 
 async function dmIntro(){
   const snap=await playersRef.once('value');
