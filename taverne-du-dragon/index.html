@@ -595,10 +595,11 @@ let currentPreset = 0;
 function getVoice(preset) {
   const voices = synth.getVoices();
   const fr = voices.filter(v => v.lang.startsWith('fr'));
+  if (!fr.length) return voices[0];
   if (preset.gender === 'male') {
-    return fr.find(v => v.name.toLowerCase().includes('thomas') || v.name.toLowerCase().includes('pierre') || v.name.toLowerCase().includes('male')) || fr[0] || voices[0];
+    return fr.find(v => v.name.toLowerCase().includes('thomas') || v.name.toLowerCase().includes('pierre')) || fr[0];
   }
-  return fr[Math.floor(Math.random() * Math.max(1, Math.min(fr.length, 2 + preset.pitch))] || fr[0] || voices[0];
+  return fr[0];
 }
 
 function speak(text) {
