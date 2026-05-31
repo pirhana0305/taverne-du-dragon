@@ -194,6 +194,10 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
     <label class="field-label">CODE DE SESSION</label>
     <input class="field-input" id="lobby-code" type="text" placeholder="Ex : DRAG42" maxlength="8" style="text-transform:uppercase;letter-spacing:3px;font-family:'Cinzel',serif;" />
     <button class="btn-secondary" onclick="joinSession()">REJOINDRE UNE PARTIE</button>
+    <div class="lobby-sep">OU</div>
+    <label class="field-label">REPRENDRE MA CAMPAGNE</label>
+    <p style="font-size:12px;color:var(--ink3);font-style:italic;margin-bottom:10px;">Entre le code de session + ton pseudo pour reprendre où tu t'es arrêté</p>
+    <button class="btn-secondary" style="border-color:var(--ember);color:var(--ember);" onclick="resumeSession()">⚔ REPRENDRE LA CAMPAGNE</button>
     <div id="create-panel" style="display:none;margin-top:20px;">
       <div class="session-code-display">
         <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:8px;">CODE À PARTAGER</div>
@@ -402,6 +406,32 @@ function renderWaitingPlayers(players){
     div.innerHTML=`<div class="dot"></div><span>${p.pseudo}</span><span class="role-badge">${p.ready?'PRÊT':'EN ATTENTE'}</span>`;
     list.appendChild(div);
   });
+}
+
+async function resumeSession() {
+  myPseudo = document.getElementById('lobby-pseudo').value.trim();
+  const code = document.getElementById('lobby-code').value.trim().toUpperCase();
+  if (!myPseudo) { showToast('Entre ton pseudo !'); return; }
+  if (!code) { showToast('Entre le code de ta session !'); return; }
+  const snap = await db.ref('sessions/'+code).once('value');
+  if (!snap.exists()) { showToast('Session introuvable !'); return; }
+  sessionCode=code; isHost=false;
+  sessionRef=db.ref('sessions/'+sessionCode);
+  playersRef=sessionRef.child('players');
+  messagesRef=sessionRef.child('messages');
+  // Récupérer les infos du perso sauvegardé
+  const playerSnap = await playersRef.child(myPseudo).once('value');
+  if (playerSnap.exists()) {
+    const saved = playerSnap.val();
+    myCharData = saved;
+    hp = saved.hp || 10; hpMax = saved.hpMax || 10;
+    mana = saved.mana || 6; manaMax = saved.manaMax || 6;
+    showToast('Campagne reprise ! Bon retour ' + (saved.name || myPseudo));
+    startGame();
+  } else {
+    showToast('Personnage introuvable — crée-en un nouveau');
+    showCreateScreen();
+  }
 }
 
 async function joinSession(){
