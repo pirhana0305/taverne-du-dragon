@@ -503,7 +503,7 @@ function startGame(){
   messagesRef.on('child_added',snap=>{
     if(seenKeys.has(snap.key))return;
     seenKeys.add(snap.key);
-    renderMessage(snap.val());
+    const m=snap.val();renderMessage(m);if(m.type==='dm')speak(m.text);
   });
   playersRef.on('value',snap=>{renderOnlinePlayers(snap.val()||{});renderHeaderPlayers(snap.val()||{});});
   if(isHost){messagesRef.once('value').then(s=>{if(!s.exists())setTimeout(()=>dmIntro(),800);});}
