@@ -1,0 +1,3 @@
+[build]
+  publish = "taverne-du-dragon"
+    functions = "taverne-du-dragon/netlify/functions"
