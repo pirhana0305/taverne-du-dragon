@@ -395,7 +395,7 @@ async function showCreateSession(){
   playersRef.on('value',snap=>{
     const players=snap.val()||{};
     renderWaitingPlayers(players);
-    document.getElementById('launch-btn').style.display=Object.keys(players).length>=1?'block':'none';
+    document.getElementById('launch-btn').style.display='block';
   });
 }
 
@@ -505,7 +505,7 @@ function startGame(){
     renderMessage(snap.val());
   });
   playersRef.on('value',snap=>{renderOnlinePlayers(snap.val()||{});renderHeaderPlayers(snap.val()||{});});
-  if(isHost)setTimeout(()=>dmIntro(),800);
+  if(isHost){messagesRef.once('value').then(s=>{if(!s.exists())setTimeout(()=>dmIntro(),800);});}
   document.getElementById('action-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAction();}});
 }
 
