@@ -831,7 +831,9 @@ function startGame(){
   messagesRef.once('value').then(snap=>{
     const msgs=snap.val();
     if(msgs){Object.entries(msgs).forEach(([key,msg])=>{seenKeys.add(key);if(shouldShowMsg(msg))renderMessage(msg);if(msg.type==='dm')chatHistory.push({role:'assistant',content:msg.text.replace(/<[^>]*>/g,'')});else if(msg.type==='player')chatHistory.push({role:'user',content:msg.text});});}
-    messagesRef.on('child_added',snap2=>{
+    // Écouter seulement les nouveaux messages (après le chargement initial)
+    const lastTs=Date.now();
+    messagesRef.orderByChild('ts').startAt(lastTs).on('child_added',snap2=>{
       if(seenKeys.has(snap2.key))return;seenKeys.add(snap2.key);
       const msg=snap2.val();
       if(shouldShowMsg(msg)){renderMessage(msg);if(msg.type==='dm')speak(msg.text);}
@@ -1108,19 +1110,28 @@ Règles: réponds en 1-3 phrases directes, sans titre. Les joueurs peuvent être
 }
 
 function parseAndApplyStats(text){
-  const t=text.toLowerCase();
-  let m,changed=false;
-  // PV perdus
-  m=t.match(/perd[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(vie|pv|hp)/);
-  if(m){hp=Math.max(0,hp-parseInt(m[1]));changed=true;showStatFlash('hp-val',-parseInt(m[1]));}
-  m=t.match(/inflige[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(dégât|damage)/);
-  if(m&&!t.includes('perd')){hp=Math.max(0,hp-parseInt(m[1]));changed=true;showStatFlash('hp-val',-parseInt(m[1]));}
+  const t=text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  let hpChange=0,manaChange=0,changed=false;
+  // PV perdus - toutes variantes
+  const losePatterns=[
+    /(?:tu perds?|vous perdez|perd[s]?|subit|subis|prend[s]?|encaisse[s]?|retire[r]?[- ])\s*(\d+)\s*(?:points?\s*(?:de\s*)?)?(?:vie|pv|hp|sante|degats?|blessures?)/,
+    /inflige[s]?(?:\s+\w+)?\s*(\d+)\s*(?:points?\s*(?:de\s*)?)?(?:degats?|blessures?|dommages?)/,
+    /-(\d+)\s*(?:pv|hp|vie)/,
+    /(\d+)\s*(?:points?\s*(?:de\s*)?)?(?:degats?|blessures?)\s*(?:sont\s*)?inflige/,
+    /(?:ta|votre)\s*vie\s*(?:chute|tombe|baisse|diminue|passe)\s*(?:a|de)\s*\d+.*?(\d+)\s*(?:pv|hp)/,
+  ];
+  for(const p of losePatterns){const m=t.match(p);if(m){hpChange=-parseInt(m[1]||m[2]||0);break;}}
   // PV gagnés
-  m=t.match(/(?:récupère|regagne|soigne)\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(vie|pv|hp)/);
-  if(m){hp=Math.min(hpMax,hp+parseInt(m[1]));changed=true;showStatFlash('hp-val',parseInt(m[1]));}
-  // Énergie
-  m=t.match(/perd[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?énergie/);
-  if(m){mana=Math.max(0,mana-parseInt(m[1]));changed=true;}
+  const gainPatterns=[
+    /(?:recupere[s]?|regagne[s]?|soigne[s]?|gagne[s]?|restaure[s]?)\s*(\d+)\s*(?:points?\s*(?:de\s*)?)?(?:vie|pv|hp)/,
+    /\+(\d+)\s*(?:pv|hp|vie)/,
+  ];
+  if(!hpChange){for(const p of gainPatterns){const m=t.match(p);if(m){hpChange=parseInt(m[1]||0);break;}}}
+  // Energie perdue
+  const manaP=/(?:depense[s]?|perd[s]?|consomme[s]?)\s*(\d+)\s*(?:points?\s*(?:de\s*)?)?(?:energie|mana|endurance)/;
+  const mm=t.match(manaP);if(mm)manaChange=-parseInt(mm[1]);
+  if(hpChange){hp=Math.max(0,Math.min(hpMax,hp+hpChange));changed=true;showStatFlash('hp-val',hpChange);}
+  if(manaChange){mana=Math.max(0,Math.min(manaMax,mana+manaChange));changed=true;}
   if(changed)updateBars();
 }
 
