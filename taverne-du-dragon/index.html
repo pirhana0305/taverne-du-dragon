@@ -175,6 +175,7 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
 .voice-dots span:nth-child(3){animation-delay:0.4s;}
 .voice-status.listening-show .voice-dots span{background:#ff6a6a;}
 .voice-status.speaking-show .voice-dots span{background:#6ada6a;}
+@keyframes stat-flash{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-20px);}}
 .toast{position:fixed;top:20px;right:20px;z-index:999;background:#1e1408;border:1px solid var(--gold);color:var(--parch2);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;padding:10px 16px;border-radius:4px;opacity:0;transition:opacity 0.3s;pointer-events:none;}
 .toast.show{opacity:1;}
 </style>
@@ -297,7 +298,7 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
     </div>
     <div class="narrative-zone">
       <div class="campaign-bar">
-        <div><div class="campaign-name">Les Mines de Cendrefond</div><div class="session-info">Acte I — La Descente</div></div>
+        <div><div class="campaign-name">Les Mines de Cendrefond — <span id="current-room-name" style="color:var(--gold);font-size:10px;">Entrée</span></div><div class="session-info">Acte I — La Descente</div></div>
       </div>
       <div class="story-log" id="story-log"><div class="msg-system">— La campagne commence —</div></div>
       <div class="voice-status" id="voice-status-bar">
@@ -499,7 +500,22 @@ function startGame(){
   document.getElementById('game-char-class').textContent=myCharData.race+' · '+myCharData.classe;
   const sk=['FOR','DEX','CON','INT','SAG','CHA'],si=['for','dex','con','int','sag','cha'];
   sk.forEach((k,i)=>{document.getElementById('g-'+si[i]).textContent=myCharData.stats[k];document.getElementById('g-'+si[i]+'-m').textContent=getMod(myCharData.stats[k]);});
-  updateBars();buildMiniMap();
+  updateBars();
+  // Charger salle sauvegardée
+  playersRef.child(myPseudo).once('value').then(s=>{
+    const sv=s.val();
+    if(sv&&sv.room&&ROOMS[sv.room]){myRoom=sv.room;visitedRooms.add(myRoom);}
+    buildMiniMap();
+    const rn=document.getElementById('current-room-name');
+    if(rn)rn.textContent=ROOMS[myRoom]?.name||'Entrée';
+  });
+  // Sync positions tous les joueurs
+  playersRef.on('value',snap2=>{
+    const pls=snap2.val()||{};
+    playerRooms={};
+    Object.entries(pls).forEach(([k,v])=>{playerRooms[k]=v.room||'entree';});
+    buildMiniMap();
+  });
   messagesRef.on('child_added',snap=>{
     if(seenKeys.has(snap.key))return;
     seenKeys.add(snap.key);
@@ -519,14 +535,88 @@ function updateBars(){
   document.getElementById('xp-bar').style.width=Math.round(xp/100*100)+'%';
 }
 
+
+// Définition des pièces
+const ROOMS={
+  entree:{id:'entree',name:'Entrée',x:65,y:5,w:30,h:20,exits:['couloir_n']},
+  couloir_n:{id:'couloir_n',name:'Couloir nord',x:75,y:28,w:10,h:20,exits:['entree','carrefour','salle_garde']},
+  salle_garde:{id:'salle_garde',name:'Salle des gardes',x:98,y:30,w:40,h:28,exits:['couloir_n']},
+  carrefour:{id:'carrefour',name:'Carrefour',x:55,y:55,w:30,h:22,exits:['couloir_n','galerie_w','couloir_s','salle_boss']},
+  galerie_w:{id:'galerie_w',name:'Galerie ouest',x:5,y:55,w:38,h:22,exits:['carrefour']},
+  couloir_s:{id:'couloir_s',name:'Couloir sud',x:75,y:80,w:10,h:20,exits:['carrefour','crypte']},
+  crypte:{id:'crypte',name:'Crypte',x:55,y:105,w:40,h:25,exits:['couloir_s']},
+  salle_boss:{id:'salle_boss',name:'Salle du Seigneur',x:40,y:82,w:28,h:20,exits:['carrefour']},
+};
+let myRoom='entree';
+let playerRooms={};
+let visitedRooms=new Set(['entree']);
+const PCOLORS=['#ff4444','#44aaff','#44ff88','#ffaa44','#cc44ff'];
+let pColorMap={},pColorIdx=0;
+
+function getPColor(p){if(!pColorMap[p]){pColorMap[p]=PCOLORS[pColorIdx%PCOLORS.length];pColorIdx++;}return pColorMap[p];}
+
 function buildMiniMap(){
   const map=document.getElementById('mini-map');map.innerHTML='';
-  [{x:100,y:72,w:10,h:5},{x:45,y:72,w:15,h:5},{x:75,y:90,w:10,h:10},{x:145,y:80,w:5,h:20},{x:75,y:40,w:10,h:20}]
-    .forEach(c=>{const el=document.createElement('div');el.className='map-corridor';el.style.cssText=`left:${c.x}px;top:${c.y}px;width:${c.w}px;height:${c.h}px;`;map.appendChild(el);});
-  [{x:60,y:60,w:40,h:30,cls:'current'},{x:110,y:55,w:35,h:35,cls:'visited'},{x:10,y:55,w:35,h:35,cls:'visited'},{x:60,y:100,w:40,h:30,cls:'visited'},{x:115,y:100,w:35,h:25,cls:'unknown'},{x:60,y:10,w:40,h:30,cls:'unknown'}]
-    .forEach(r=>{const el=document.createElement('div');el.className='map-room '+r.cls;el.style.cssText=`left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;`;map.appendChild(el);});
-  const p=document.createElement('div');p.className='map-player';p.style.cssText='left:75px;top:68px;';map.appendChild(p);
+  const W=160,H=160,SX=W/155,SY=H/135;
+  Object.values(ROOMS).forEach(room=>{
+    if(!visitedRooms.has(room.id)&&room.id!==myRoom)return;
+    const el=document.createElement('div');
+    el.className='map-room '+(room.id===myRoom?'current':'visited');
+    el.style.cssText='left:'+Math.round(room.x*SX)+'px;top:'+Math.round(room.y*SY)+'px;width:'+Math.round(room.w*SX)+'px;height:'+Math.round(room.h*SY)+'px;';
+    el.title=room.name;map.appendChild(el);
+    // Couloirs vers pièces visitées
+    Object.values(ROOMS).forEach(r2=>{
+      if(!visitedRooms.has(r2.id)&&r2.id!==myRoom)return;
+      if(room.exits.includes(r2.id)){
+        const cx=(room.x+room.w/2)*SX,cy=(room.y+room.h/2)*SY;
+        const cx2=(r2.x+r2.w/2)*SX,cy2=(r2.y+r2.h/2)*SY;
+        const co=document.createElement('div');co.className='map-corridor';
+        const minX=Math.min(cx,cx2),minY=Math.min(cy,cy2);
+        const w=Math.max(3,Math.abs(cx2-cx)),h=Math.max(3,Math.abs(cy2-cy));
+        co.style.cssText='left:'+Math.round(minX)+'px;top:'+Math.round(minY)+'px;width:'+Math.round(w)+'px;height:'+Math.round(h)+'px;';
+        map.appendChild(co);
+      }
+    });
+    // Marqueurs joueurs
+    const here=Object.entries(playerRooms).filter(([,r])=>r===room.id).map(([p])=>p);
+    here.forEach((p,i)=>{
+      const dot=document.createElement('div');dot.className='map-player';
+      dot.style.cssText='left:'+(Math.round(room.x*SX)+3+i*9)+'px;top:'+(Math.round(room.y*SY)+3)+'px;background:'+getPColor(p)+';border-color:'+getPColor(p)+';';
+      dot.title=p;map.appendChild(dot);
+    });
+  });
 }
+
+function moveToRoom(roomId){
+  if(!ROOMS[roomId])return;
+  myRoom=roomId;visitedRooms.add(roomId);
+  playersRef.child(myPseudo).update({room:roomId});
+  buildMiniMap();
+  document.getElementById('current-room-name').textContent=ROOMS[roomId].name;
+  showToast('📍 '+ROOMS[roomId].name);
+}
+
+function detectRoomChange(txt){
+  const t=txt.toLowerCase();
+  const moves={
+    salle_garde:['salle des gardes','gardes'],
+    carrefour:['carrefour'],
+    galerie_w:['galerie ouest','galerie'],
+    couloir_s:['couloir sud'],
+    crypte:['crypte'],
+    salle_boss:['seigneur','grande salle','boss'],
+    couloir_n:['couloir nord'],
+    entree:['entrée','sortie','exit'],
+  };
+  for(const[id,keys]of Object.entries(moves)){
+    if(keys.some(k=>t.includes(k))&&ROOMS[myRoom]?.exits.includes(id)){
+      moveToRoom(id);return id;
+    }
+  }
+  return null;
+}
+
+
 
 function renderOnlinePlayers(players){
   const list=document.getElementById('online-players-list');list.innerHTML='';
@@ -553,6 +643,10 @@ function renderMessage(msg){
   if(msg.type==='dm'){
     div.innerHTML=`<div class="msg-dm"><p>${msg.text}</p></div>`;
   }else if(msg.type==='player'){
+    // Filtrer par salle: visible si même salle ou pas de salle définie
+    if(msg.room&&myRoom&&msg.room!==myRoom&&msg.author!==(myCharData.name||myPseudo)){
+      log.scrollTop=log.scrollHeight;return;
+    }
     div.innerHTML=`<div class="msg-player"><div class="msg-player-header">⚔ ${(msg.author||'?').toUpperCase()}</div><p>${msg.text}</p></div>`;
   }else if(msg.type==='roll'){
     const oc=msg.outcome==='crit'?'roll-crit':msg.outcome==='success'?'roll-success':msg.outcome==='fail'?'roll-fail':'';
@@ -570,6 +664,8 @@ function rollDiceBtn(sides,btn){
   let outcome='';
   if(sides===20){outcome=result===20?'crit':result===1?'fail':result>=10?'success':'fail';}
   messagesRef.push({type:'roll',dice:sides,result,outcome,author:myCharData.name||myPseudo,ts:Date.now()});
+  const rollMsg = '[JET D'+sides+' par '+( myCharData.name||myPseudo)+': '+result+(outcome==='crit'?' — CRITIQUE !':outcome==='fail'?' — ÉCHEC CRITIQUE':'')+ ']';
+  chatHistory.push({role:'user', content:rollMsg});
 }
 
 function setAction(text){document.getElementById('action-input').value=text;document.getElementById('action-input').focus();}
@@ -578,7 +674,7 @@ async function sendAction(){
   const input=document.getElementById('action-input');
   const action=input.value.trim();if(!action)return;
   input.value='';document.getElementById('send-btn').disabled=true;
-  await messagesRef.push({type:'player',text:action,author:myCharData.name||myPseudo,ts:Date.now()});
+  await messagesRef.push({type:'player',text:action,author:myCharData.name||myPseudo,room:myRoom,ts:Date.now()});
   chatHistory.push({role:'user',content:`${myCharData.name||myPseudo} (${myCharData.race} ${myCharData.classe}): ${action}`});
   if(isHost)await dmRespond(action);
   document.getElementById('send-btn').disabled=false;
@@ -589,7 +685,7 @@ async function dmRespond(playerAction){
   const snap=await playersRef.once('value');
   const players=snap.val()||{};
   const partyDesc=Object.values(players).map(p=>`${p.name||p.pseudo} (${p.race||'?'} ${p.classe||'?'})`).join(', ');
-  const systemPrompt=`Tu es le Maître du Donjon d'une partie D&D en français. Campagne : "Les Mines de Cendrefond". Groupe : ${partyDesc}. Narrer en 2-4 phrases vivantes. Si une action demande un jet, l'indiquer. Ton épique médiéval-fantastique. Uniquement la narration, sans méta-commentaires.`;
+  const systemPrompt=`Tu es le Maître du Donjon D&D. Mines de Cendrefond. Joueurs: ${partyDesc}. Narre en 1-3 phrases directes, sans titre, sans préambule. Si perte de PV/mana, précise le montant. Médiéval-fantastique.`
   try{
     const response=await fetch('/.netlify/functions/dm',{
       method:'POST',
@@ -601,7 +697,21 @@ async function dmRespond(playerAction){
     chatHistory.push({role:'assistant',content:reply});
     typing.classList.remove('active');
     await messagesRef.push({type:'dm',text:reply,ts:Date.now()});
-    xp=Math.min(100,xp+Math.floor(Math.random()*6)+2);updateBars();
+    // Parser stats automatiquement
+    const sText=reply.toLowerCase();
+    let hpD=0,manaD=0,xpD=0;
+    let m;
+    m=sText.match(/perd[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(vie|pv|hp)/);if(m)hpD=-parseInt(m[1]);
+    m=sText.match(/inflige[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(dégât|damage)/);if(m&&!hpD)hpD=-parseInt(m[1]);
+    m=sText.match(/(?:récupère|regagne|soigne)\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?(vie|pv|hp)/);if(m)hpD=parseInt(m[1]);
+    m=sText.match(/perd[s]?\s+(\d+)\s*(?:points?\s*(?:de\s*)?)?mana/);if(m)manaD=-parseInt(m[1]);
+    m=sText.match(/(\d+)\s*(?:points?\s*(?:d')?)?(?:expérience|xp)/);if(m)xpD=parseInt(m[1]);
+    if(hpD){hp=Math.max(0,Math.min(hpMax,hp+hpD));const fl=document.createElement('span');fl.style='position:absolute;font-family:Cinzel,serif;font-size:11px;font-weight:700;animation:stat-flash 1.5s ease forwards;pointer-events:none;color:'+(hpD<0?'#ff4444':'#44ff88');fl.textContent=(hpD>0?'+':'')+hpD;const hv=document.getElementById('hp-val');hv.style.position='relative';hv.appendChild(fl);setTimeout(()=>fl.remove(),1500);}
+    if(manaD)mana=Math.max(0,Math.min(manaMax,mana+manaD));
+    xp=Math.min(100,xp+(xpD||Math.floor(Math.random()*3)+1));
+    updateBars();
+    playersRef.child(myPseudo).update({hp,mana,xp});
+    detectRoomChange(reply);
   }catch(e){
     typing.classList.remove('active');
     await messagesRef.push({type:'dm',text:"Les brumes du donjon obscurcissent la vision... <em>(Erreur — réessaie)</em>",ts:Date.now()});
