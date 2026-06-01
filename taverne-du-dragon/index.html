@@ -1314,19 +1314,12 @@ function renderEnemyCard(e){
   const div=document.createElement('div');
   div.id='ec-'+e.id;div.className='enemy-card';
   const pct=Math.round(e.currentHp/e.hpMax*100);
-  const icons={meute:'🐺',charge:'🐗',griffes:'🦁',venin:'🕷',embuscade:'👤',colosse:'💀',terreur:'👁',mêlée:'⚔'};
-  div.innerHTML=`<div class="enemy-card-inner${e.boss?' enemy-boss':''}">
-    <div class="enemy-header">
-      <span class="enemy-icon">${e.boss?'☠':icons[e.atk]||'⚔'}</span>
-      <div class="enemy-info"><div class="enemy-name">${e.name}${e.boss?' ☠':''}</div><div class="enemy-desc">${e.desc}</div></div>
-      <div class="enemy-type-badge">${e.atk}</div>
-    </div>
-    <div class="enemy-hp-wrap">
-      <div class="enemy-hp-label"><span>PV</span><span id="eht-${e.id}">${e.currentHp}/${e.hpMax}</span></div>
-      <div class="enemy-hp-bar-bg"><div class="enemy-hp-bar-fill" id="ehb-${e.id}" style="width:${pct}%;background:${pct>50?'#8b1515':pct>25?'#8b4010':'#3a0808'}"></div></div>
-    </div>
-    <div class="enemy-footer"><span style="color:var(--ink3)">Attaque: ${e.atk} · ${e.wpn}</span><span style="color:var(--gold2)">Butin: ${e.loot}</span></div>
-  </div>`;
+  const icons={meute:'🐺',charge:'🐗',griffes:'🦁',venin:'🕷',embuscade:'👤',colosse:'💀',terreur:'👁'};
+  const icon=e.boss?'☠':(icons[e.atk]||'⚔');
+  const bossClass=e.boss?' enemy-boss':'';
+  const bossTag=e.boss?' ☠':'';
+  const barColor=pct>50?'#8b1515':pct>25?'#8b4010':'#3a0808';
+  div.innerHTML='<div class="enemy-card-inner'+bossClass+'"><div class="enemy-header"><span class="enemy-icon">'+icon+'</span><div class="enemy-info"><div class="enemy-name">'+e.name+bossTag+'</div><div class="enemy-desc">'+e.desc+'</div></div><div class="enemy-type-badge">'+e.atk+'</div></div><div class="enemy-hp-wrap"><div class="enemy-hp-label"><span>PV</span><span id="eht-'+e.id+'">'+e.currentHp+'/'+e.hpMax+'</span></div><div class="enemy-hp-bar-bg"><div class="enemy-hp-bar-fill" id="ehb-'+e.id+'" style="width:'+pct+'%;background:'+barColor+'"></div></div></div><div class="enemy-footer"><span style="color:var(--ink3)">Attaque: '+e.atk+' · '+e.wpn+'</span><span style="color:var(--gold2)">Butin: '+e.loot+'</span></div></div>';
   log.appendChild(div);log.scrollTop=log.scrollHeight;
 }
 
