@@ -239,6 +239,20 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
 .player-faction-tag{font-size:7px;padding:1px 4px;border-radius:2px;font-family:'Cinzel',serif;letter-spacing:1px;border:1px solid;}
 
 /* Toast */
+.enemy-card{margin:4px 0;}
+.enemy-card-inner{background:linear-gradient(135deg,#1a0808,#0f0505);border:1px solid var(--blood);border-radius:4px;padding:10px 12px;}
+.enemy-boss{background:linear-gradient(135deg,#1a0818,#0f0508)!important;border:2px solid #8b1580!important;box-shadow:0 0 15px rgba(139,21,128,0.3);}
+.enemy-header{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;}
+.enemy-icon{font-size:22px;flex-shrink:0;}
+.enemy-info{flex:1;}
+.enemy-name{font-family:'Cinzel',serif;font-size:12px;color:#e8a0a0;letter-spacing:1px;margin-bottom:2px;}
+.enemy-desc{font-size:10px;color:var(--ink3);font-style:italic;}
+.enemy-type-badge{font-family:'Cinzel',serif;font-size:7px;color:var(--blood);border:1px solid var(--blood);padding:2px 5px;border-radius:2px;white-space:nowrap;letter-spacing:1px;}
+.enemy-hp-wrap{margin-bottom:6px;}
+.enemy-hp-label{display:flex;justify-content:space-between;font-size:9px;font-family:'Cinzel',serif;color:var(--parch2);margin-bottom:3px;letter-spacing:1px;}
+.enemy-hp-bar-bg{height:6px;background:#1a0505;border-radius:3px;overflow:hidden;border:1px solid #3a1010;}
+.enemy-hp-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease,background 0.5s ease;}
+.enemy-footer{display:flex;justify-content:space-between;font-size:9px;}
 .toast{position:fixed;top:16px;right:16px;z-index:999;background:#100a04;border:1px solid var(--gold);color:var(--parch2);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:8px 14px;border-radius:3px;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:280px;}
 .toast.show{opacity:1;}
 
@@ -490,46 +504,125 @@ body{font-family:'Crimson Text',serif;background:var(--stone2);color:var(--parch
       <div class="sidebar-section">
         <div class="sidebar-title">Carte de Varek</div>
         <div class="world-map-container">
-          <svg class="world-map-svg" viewBox="0 0 200 180" xmlns="http://www.w3.org/2000/svg" id="world-map">
-            <!-- Fond mer -->
-            <rect width="200" height="180" fill="#0a0e1a"/>
-            <!-- Zones -->
-            <!-- Ashford - côte ouest -->
-            <ellipse cx="30" cy="100" rx="22" ry="28" fill="#1a2a1a" stroke="#3a5a3a" stroke-width="1" class="zone-area" id="zone-ashford" onclick="zoneInfo('ashford')" data-zone="ashford"/>
-            <!-- Hauts de Caern - nord -->
-            <ellipse cx="100" cy="28" rx="35" ry="22" fill="#2a2010" stroke="#5a4a20" stroke-width="1" class="zone-area" id="zone-caern" onclick="zoneInfo('caern')" data-zone="caern"/>
-            <!-- Forêt de Vael - centre -->
-            <ellipse cx="90" cy="90" rx="28" ry="30" fill="#0a1a0a" stroke="#1a3a1a" stroke-width="1.5" stroke-dasharray="3,2" class="zone-area" id="zone-vael" onclick="zoneInfo('vael')" data-zone="vael"/>
-            <!-- Mer des Couteaux - est -->
-            <ellipse cx="168" cy="75" rx="24" ry="32" fill="#0a1020" stroke="#1a2a40" stroke-width="1" class="zone-area" id="zone-mer" onclick="zoneInfo('mer')" data-zone="mer"/>
-            <!-- Terres Brûlées - sud-est -->
-            <ellipse cx="148" cy="145" rx="30" ry="22" fill="#1a0f08" stroke="#3a2010" stroke-width="1" class="zone-area" id="zone-terres" onclick="zoneInfo('terres_brulees')" data-zone="terres_brulees"/>
-            <!-- Karath-Dun - sud -->
-            <ellipse cx="75" cy="155" rx="25" ry="18" fill="#1a1408" stroke="#4a3810" stroke-width="1.5" class="zone-area" id="zone-karath" onclick="zoneInfo('karath')" data-zone="karath"/>
-            <!-- Routes -->
-            <line x1="50" y1="90" x2="62" y2="90" stroke="#3a2a10" stroke-width="0.5" stroke-dasharray="2,2"/>
-            <line x1="90" y1="62" x2="90" y2="50" stroke="#3a2a10" stroke-width="0.5" stroke-dasharray="2,2"/>
-            <line x1="118" y1="90" x2="144" y2="90" stroke="#3a2a10" stroke-width="0.5" stroke-dasharray="2,2"/>
-            <line x1="100" y1="120" x2="100" y2="137" stroke="#3a2a10" stroke-width="0.5" stroke-dasharray="2,2"/>
-            <!-- Labels -->
-            <text x="30" y="97" class="zone-label" fill="#a0c4a0">Ashford</text>
-            <text x="100" y="25" class="zone-label" fill="#c4b080">Hauts de Caern</text>
-            <text x="90" y="88" class="zone-label" fill="#608060">Forêt de Vael</text>
-            <text x="168" y="72" class="zone-label" fill="#8090c0">Mer des</text>
-            <text x="168" y="81" class="zone-label" fill="#8090c0">Couteaux</text>
-            <text x="148" y="143" class="zone-label" fill="#a08060">Terres</text>
-            <text x="148" y="152" class="zone-label" fill="#a08060">Brûlées</text>
-            <text x="75" y="153" class="zone-label" fill="#c0a040">Karath-Dun</text>
-            <!-- Icônes zones -->
-            <text x="30" y="110" text-anchor="middle" font-size="8">⚓</text>
-            <text x="100" y="38" text-anchor="middle" font-size="8">⛰</text>
-            <text x="90" y="100" text-anchor="middle" font-size="8">🌲</text>
-            <text x="168" y="85" text-anchor="middle" font-size="8">⚔</text>
-            <text x="148" y="157" text-anchor="middle" font-size="8">🔥</text>
-            <text x="75" y="163" text-anchor="middle" font-size="8">🏰</text>
-            <!-- Joueurs dots - générés dynamiquement -->
-            <g id="player-dots-map"></g>
-          </svg>
+          <svg class="world-map-svg" viewBox="0 0 280 320" xmlns="http://www.w3.org/2000/svg" id="world-map" style="border-radius:4px;">
+<defs>
+<filter id="pg"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="n"/><feColorMatrix type="saturate" values="0" in="n" result="g"/><feBlend in="SourceGraphic" in2="g" mode="multiply"/></filter>
+<radialGradient id="bg1" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#c8a96e"/><stop offset="60%" stop-color="#b8924a"/><stop offset="100%" stop-color="#8a6428"/></radialGradient>
+<radialGradient id="sg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#1a2a4a"/><stop offset="100%" stop-color="#0a1020"/></radialGradient>
+<pattern id="hw" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(30)"><line x1="0" y1="0" x2="0" y2="8" stroke="#2a3a5a" stroke-width="0.5" opacity="0.4"/></pattern>
+</defs>
+<rect width="280" height="320" fill="url(#sg)"/>
+<rect width="280" height="320" fill="url(#hw)" opacity="0.5"/>
+<path d="M20,40 Q30,15 70,10 Q120,5 160,20 Q200,8 240,30 Q260,50 255,90 Q265,130 250,170 Q260,210 245,250 Q230,285 200,300 Q160,315 120,310 Q80,315 50,295 Q20,275 15,240 Q5,200 15,160 Q5,120 15,80Z" fill="url(#bg1)" filter="url(#pg)" opacity="0.95"/>
+<line x1="15" y1="100" x2="255" y2="95" stroke="#8a6428" stroke-width="0.3" opacity="0.25" stroke-dasharray="4,4"/>
+<line x1="15" y1="200" x2="250" y2="195" stroke="#8a6428" stroke-width="0.3" opacity="0.25" stroke-dasharray="4,4"/>
+<line x1="90" y1="8" x2="85" y2="308" stroke="#8a6428" stroke-width="0.3" opacity="0.25" stroke-dasharray="4,4"/>
+<line x1="170" y1="8" x2="165" y2="308" stroke="#8a6428" stroke-width="0.3" opacity="0.25" stroke-dasharray="4,4"/>
+<text x="140" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#2a1a05" font-weight="bold" letter-spacing="3" opacity="0.85">VAREK</text>
+<text x="140" y="32" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#4a3a15" font-style="italic" opacity="0.7">Les Terres de la Discorde</text>
+<line x1="80" y1="35" x2="200" y2="35" stroke="#5a3a10" stroke-width="0.5" opacity="0.4"/>
+<g id="zone-caern" class="zone-area" onclick="zoneInfo('caern')" style="cursor:pointer">
+<path d="M55,40 Q90,28 130,32 Q168,28 200,42 Q215,58 208,75 Q192,88 162,90 Q130,94 100,90 Q70,92 52,80 Q38,65 42,52Z" fill="#7a6030" stroke="#4a3010" stroke-width="1.5" opacity="0.9"/>
+<path d="M78,82 L86,60 L94,82Z" fill="#5a4020" stroke="#3a2a10" stroke-width="0.5"/>
+<path d="M92,82 L102,56 L112,82Z" fill="#5a4020" stroke="#3a2a10" stroke-width="0.5"/>
+<path d="M110,82 L120,58 L130,82Z" fill="#5a4020" stroke="#3a2a10" stroke-width="0.5"/>
+<path d="M128,82 L137,60 L146,82Z" fill="#5a4020" stroke="#3a2a10" stroke-width="0.5"/>
+<path d="M144,80 L152,62 L160,80Z" fill="#5a4020" stroke="#3a2a10" stroke-width="0.5"/>
+<path d="M85,62 L86,60 L87,62Z" fill="#e8d5a3" opacity="0.9"/>
+<path d="M101,58 L102,56 L103,58Z" fill="#e8d5a3" opacity="0.9"/>
+<path d="M119,60 L120,58 L121,60Z" fill="#e8d5a3" opacity="0.9"/>
+<path d="M136,62 L137,60 L138,62Z" fill="#e8d5a3" opacity="0.9"/>
+<path d="M151,64 L152,62 L153,64Z" fill="#e8d5a3" opacity="0.9"/>
+<text x="118" y="48" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#2a1a05" font-weight="bold" letter-spacing="1">HAUTS DE CAERN</text>
+<text x="118" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#3a2a10" font-style="italic">Terres des Clans</text>
+</g>
+<g id="zone-ashford" class="zone-area" onclick="zoneInfo('ashford')" style="cursor:pointer">
+<path d="M18,105 Q22,82 40,76 Q58,70 72,82 Q82,94 80,122 Q75,148 58,155 Q38,160 24,146 Q12,130 16,115Z" fill="#2a4a2a" stroke="#1a3a1a" stroke-width="1.5" opacity="0.9"/>
+<rect x="34" y="118" width="5" height="9" fill="#1a2a1a" stroke="#0a1a0a" stroke-width="0.5"/>
+<rect x="42" y="114" width="7" height="13" fill="#1a2a1a" stroke="#0a1a0a" stroke-width="0.5"/>
+<rect x="52" y="120" width="5" height="8" fill="#1a2a1a" stroke="#0a1a0a" stroke-width="0.5"/>
+<rect x="42" y="111" width="7" height="4" fill="#0a1a0a"/>
+<line x1="45" y1="111" x2="45" y2="104" stroke="#3a2010" stroke-width="0.8"/>
+<path d="M45,104 L51,107 L45,110Z" fill="#8b1515"/>
+<path d="M18,122 Q21,119 24,122 Q27,125 30,122" stroke="#4a6a8a" stroke-width="1" fill="none" opacity="0.6"/>
+<path d="M17,132 Q20,129 23,132 Q26,135 29,132" stroke="#4a6a8a" stroke-width="1" fill="none" opacity="0.6"/>
+<text x="48" y="100" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#0a1a0a" font-weight="bold">ASHFORD</text>
+<text x="48" y="109" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#1a2a1a" font-style="italic">Port de la Discorde</text>
+</g>
+<g id="zone-vael" class="zone-area" onclick="zoneInfo('vael')" style="cursor:pointer">
+<path d="M88,100 Q105,90 132,94 Q155,92 164,112 Q170,132 158,152 Q144,168 118,170 Q92,172 78,155 Q66,138 70,118Z" fill="#0f2a0f" stroke="#1a4a1a" stroke-width="1.5" stroke-dasharray="5,2" opacity="0.92"/>
+<circle cx="102" cy="132" r="6" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<circle cx="116" cy="122" r="5" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<circle cx="130" cy="135" r="6" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<circle cx="118" cy="148" r="5" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<circle cx="105" cy="145" r="4" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<circle cx="140" cy="128" r="5" fill="#0a1f0a" stroke="#1a3a1a" stroke-width="0.5"/>
+<line x1="102" y1="138" x2="102" y2="143" stroke="#1a0f05" stroke-width="1.2"/>
+<line x1="116" y1="127" x2="116" y2="132" stroke="#1a0f05" stroke-width="1.2"/>
+<line x1="130" y1="141" x2="130" y2="146" stroke="#1a0f05" stroke-width="1.2"/>
+<circle cx="120" cy="135" r="12" fill="#1a4a1a" opacity="0.2"/>
+<text x="120" y="110" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#a0c4a0" font-weight="bold">FORÊT DE VAEL</text>
+<text x="120" y="119" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#607a60" font-style="italic">L'Ancienne</text>
+</g>
+<g id="zone-mer" class="zone-area" onclick="zoneInfo('mer')" style="cursor:pointer">
+<path d="M190,62 Q215,52 240,62 Q258,76 256,106 Q254,132 236,146 Q218,158 200,150 Q180,136 178,110 Q174,84 190,70Z" fill="#1a2a4a" stroke="#2a4a7a" stroke-width="1.5" opacity="0.9"/>
+<path d="M198,90 Q204,86 210,90 Q216,94 222,90 Q228,86 234,90" stroke="#4a7aaa" stroke-width="1" fill="none"/>
+<path d="M196,105 Q202,101 208,105 Q214,109 220,105 Q226,101 232,105" stroke="#4a7aaa" stroke-width="1" fill="none"/>
+<path d="M198,120 Q204,116 210,120 Q216,124 222,120" stroke="#4a7aaa" stroke-width="1" fill="none"/>
+<path d="M207,128 L222,128 L220,137 L209,137Z" fill="#2a1a0a" stroke="#1a0a05" stroke-width="0.5"/>
+<line x1="214" y1="120" x2="214" y2="128" stroke="#1a0a05" stroke-width="1"/>
+<path d="M214,120 L221,124 L214,128Z" fill="#8b1515" opacity="0.9"/>
+<text x="216" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c4d4f0" font-weight="bold">MER DES</text>
+<text x="216" y="87" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c4d4f0" font-weight="bold">COUTEAUX</text>
+<text x="216" y="96" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#8090c0" font-style="italic">Sans loi</text>
+</g>
+<g id="zone-terres" class="zone-area" onclick="zoneInfo('terres_brulees')" style="cursor:pointer">
+<path d="M165,202 Q188,190 218,193 Q244,196 252,220 Q256,244 241,264 Q224,280 198,282 Q170,284 155,264 Q142,246 146,224Z" fill="#2a1008" stroke="#4a2010" stroke-width="1.5" opacity="0.9"/>
+<path d="M178,255 Q181,244 184,253 Q187,242 190,251 Q193,240 196,249" stroke="#8b4010" stroke-width="1.5" fill="none"/>
+<path d="M198,258 Q201,247 204,256 Q207,245 210,254" stroke="#8b4010" stroke-width="1.5" fill="none"/>
+<rect x="196" y="228" width="7" height="12" fill="none" stroke="#5a3010" stroke-width="1"/>
+<rect x="207" y="225" width="9" height="15" fill="none" stroke="#5a3010" stroke-width="1"/>
+<line x1="178" y1="228" x2="178" y2="242" stroke="#3a1a0a" stroke-width="1.2"/>
+<line x1="174" y1="232" x2="182" y2="232" stroke="#3a1a0a" stroke-width="1.2"/>
+<text x="200" y="210" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#d4a060" font-weight="bold">TERRES</text>
+<text x="200" y="219" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#d4a060" font-weight="bold">BRÛLÉES</text>
+<text x="200" y="228" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#8a6030" font-style="italic">200 000 morts</text>
+</g>
+<g id="zone-karath" class="zone-area" onclick="zoneInfo('karath')" style="cursor:pointer">
+<path d="M80,252 Q105,238 135,242 Q158,240 168,260 Q174,282 160,298 Q142,312 115,313 Q88,315 72,295 Q60,275 68,262Z" fill="#2a2010" stroke="#5a4820" stroke-width="2" opacity="0.92"/>
+<rect x="102" y="272" width="26" height="22" fill="#1a1408" stroke="#4a3a10" stroke-width="0.8"/>
+<rect x="99" y="265" width="7" height="18" fill="#1a1408" stroke="#4a3a10" stroke-width="0.8"/>
+<rect x="124" y="265" width="7" height="18" fill="#1a1408" stroke="#4a3a10" stroke-width="0.8"/>
+<rect x="110" y="258" width="9" height="24" fill="#1a1408" stroke="#4a3a10" stroke-width="0.8"/>
+<rect x="102" y="270" width="3" height="3" fill="#0a0a08"/>
+<rect x="107" y="270" width="3" height="3" fill="#0a0a08"/>
+<rect x="112" y="270" width="3" height="3" fill="#0a0a08"/>
+<rect x="117" y="270" width="3" height="3" fill="#0a0a08"/>
+<rect x="122" y="270" width="3" height="3" fill="#0a0a08"/>
+<line x1="114" y1="258" x2="114" y2="250" stroke="#5a4010" stroke-width="1"/>
+<path d="M114,250 L120,254 L114,258Z" fill="#c4960a"/>
+<text x="114" y="255" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#c4a040" font-weight="bold">KARATH-DUN</text>
+<text x="114" y="262" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#8a7030" font-style="italic">Capitale du Traité</text>
+</g>
+<path d="M72,122 Q80,116 88,115" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<path d="M118,92 L119,100" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<path d="M162,124 Q172,118 180,112" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<path d="M125,168 Q132,182 140,196" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<path d="M92,155 Q100,190 105,238" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<path d="M152,262 Q148,268 145,272" stroke="#5a3a10" stroke-width="1" fill="none" stroke-dasharray="3,2" opacity="0.6"/>
+<g transform="translate(238,292)">
+<circle cx="0" cy="0" r="16" fill="#c8a96e" stroke="#5a3a10" stroke-width="1.5" opacity="0.9"/>
+<circle cx="0" cy="0" r="13" fill="none" stroke="#5a3a10" stroke-width="0.5" opacity="0.4"/>
+<path d="M0,-13 L3,-3 L0,0 L-3,-3Z" fill="#8b1515"/>
+<path d="M0,13 L3,3 L0,0 L-3,3Z" fill="#2a1a0a"/>
+<text x="0" y="-15" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#2a1a0a" font-weight="bold">N</text>
+<text x="0" y="21" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#2a1a0a">S</text>
+<text x="-19" y="2" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#2a1a0a">O</text>
+<text x="19" y="2" text-anchor="middle" font-family="Georgia,serif" font-size="6" fill="#2a1a0a">E</text>
+</g>
+<text x="35" y="308" font-family="Georgia,serif" font-size="5.5" fill="#3a2a10" opacity="0.6" font-style="italic">⚠ La Forêt de Vael est maudite</text>
+<g id="player-dots-map"></g>
+</svg>
         </div>
       </div>
       <div class="sidebar-section">
@@ -827,17 +920,26 @@ function startGame(){
   });
   updateBars();renderEquipment();renderQuests();updateZone();
 
-  // Charger messages
+  // Charger messages existants puis écouter les nouveaux
   messagesRef.once('value').then(snap=>{
     const msgs=snap.val();
-    if(msgs){Object.entries(msgs).forEach(([key,msg])=>{seenKeys.add(key);if(shouldShowMsg(msg))renderMessage(msg);if(msg.type==='dm')chatHistory.push({role:'assistant',content:msg.text.replace(/<[^>]*>/g,'')});else if(msg.type==='player')chatHistory.push({role:'user',content:msg.text});});}
-    // Écouter seulement les nouveaux messages (après le chargement initial)
-    const lastTs=Date.now();
-    messagesRef.orderByChild('ts').startAt(lastTs).on('child_added',snap2=>{
-      if(seenKeys.has(snap2.key))return;seenKeys.add(snap2.key);
+    let lastTs=0;
+    if(msgs){
+      Object.entries(msgs).forEach(([key,msg])=>{
+        seenKeys.add(key);
+        if(shouldShowMsg(msg))renderMessage(msg);
+        if(msg.type==='dm')chatHistory.push({role:'assistant',content:msg.text.replace(/<[^>]*>/g,'')});
+        else if(msg.type==='player')chatHistory.push({role:'user',content:msg.text});
+        if((msg.ts||0)>lastTs)lastTs=msg.ts||0;
+      });
+    }
+    // Écouter UNIQUEMENT les messages après le dernier chargé
+    messagesRef.orderByChild('ts').startAt(lastTs+1).on('child_added',snap2=>{
+      if(seenKeys.has(snap2.key))return;
+      seenKeys.add(snap2.key);
       const msg=snap2.val();
       if(shouldShowMsg(msg)){renderMessage(msg);if(msg.type==='dm')speak(msg.text);}
-      if(msg.type==='dm'){chatHistory.push({role:'assistant',content:msg.text.replace(/<[^>]*>/g,'')});}
+      if(msg.type==='dm')chatHistory.push({role:'assistant',content:msg.text.replace(/<[^>]*>/g,'')});
     });
   });
 
@@ -1095,6 +1197,7 @@ Règles: réponds en 1-3 phrases directes, sans titre. Les joueurs peuvent être
     await messagesRef.push({type:'dm',text:reply,ts:Date.now()});
     // Parser stats
     parseAndApplyStats(reply);
+  if(isHost){detectEnemyFromDM(reply);detectEnemyDamage(reply);}
     // Détecter mort
     if(reply.toLowerCase().includes('vous mourez')||reply.toLowerCase().includes('tu meurs')||reply.toLowerCase().includes('est mort')){
       setTimeout(()=>triggerDeath(reply),2000);
@@ -1153,6 +1256,124 @@ function triggerDeath(deathText){
   // Marquer comme mort dans Firebase
   playersRef.child(myPseudo).update({dead:true,deathZone:myZone});
   messagesRef.push({type:'system',text:`☠ ${myCharData.name||myPseudo} est mort. Que son âme repose dans les Terres Brûlées.`,ts:Date.now()});
+}
+
+
+const ZONE_ENEMIES={
+  ashford:[
+    {name:'Rat des docks',hp:6,hpMax:6,atk:'meute',wpn:'griffes',desc:'Un rat géant agressif',loot:'quelques pièces'},
+    {name:'Ivrogne armé',hp:8,hpMax:8,atk:'mêlée',wpn:'dague',desc:'Un marin ivre qui cherche la bagarre',loot:'dague rouillée'},
+    {name:'Bandit de ruelle',hp:12,hpMax:12,atk:'mêlée',wpn:'epee',desc:'Un coupe-jarret professionnel',loot:'bourse (8 pièces)'},
+    {name:'Garde corrompu',hp:18,hpMax:18,atk:'mêlée',wpn:'epee',desc:'Un garde qui travaille pour les deux camps',loot:'armure légère'},
+  ],
+  caern:[
+    {name:'Loup des landes',hp:14,hpMax:14,atk:'griffes',wpn:'crocs',desc:'Un loup solitaire des hautes landes',loot:'fourrure'},
+    {name:'Meute de loups',hp:10,hpMax:10,atk:'meute',wpn:'crocs',desc:'Cinq loups coordonnés',loot:'fourrures',count:5},
+    {name:'Guerrier de clan',hp:22,hpMax:22,atk:'mêlée',wpn:'hache',desc:'Un fils de Caern, brutal et rapide',loot:'hache de guerre'},
+    {name:'Champion de clan',hp:35,hpMax:35,atk:'mêlée',wpn:'hache',desc:'Un guerrier d'élite tatoué de runes',loot:'hache runique'},
+    {name:'Ours des neiges',hp:45,hpMax:45,atk:'charge',wpn:'griffes',desc:'Un ours géant — ne fuir que si seul',loot:'fourrure précieuse'},
+  ],
+  vael:[
+    {name:'Chose dans les branches',hp:20,hpMax:20,atk:'embuscade',wpn:'griffes',desc:'On ne voit que ses yeux dans le noir',loot:'rien'},
+    {name:'Chasseur corrompu',hp:28,hpMax:28,atk:'mêlée',wpn:'epee',desc:'Un bûcheron qui n'est plus humain',loot:'épée corrompue'},
+    {name:'Arbre-marcheur',hp:55,hpMax:55,atk:'colosse',wpn:'coups',desc:'Un chêne millénaire qui saigne noir — seul impossible',loot:'sève noire'},
+    {name:'L'Innommable',hp:120,hpMax:120,atk:'terreur',wpn:'terreur',desc:'Quelque chose d'ancien. Fuyez.',loot:'???',boss:true},
+  ],
+  mer:[
+    {name:'Pirate de la Mer Rouge',hp:20,hpMax:20,atk:'mêlée',wpn:'epee',desc:'Un flibustier expérimenté',loot:'épée, or'},
+    {name:'Requin des couteaux',hp:38,hpMax:38,atk:'charge',wpn:'mâchoires',desc:'Un requin de 4m',loot:'dent de requin'},
+    {name:'Capitaine Vorn',hp:50,hpMax:50,atk:'mêlée',wpn:'epee',desc:'Le pirate le plus redouté des Couteaux',loot:'épée légendaire',boss:true},
+    {name:'Kraken des profondeurs',hp:150,hpMax:150,atk:'colosse',wpn:'tentacules',desc:'Seuls les fous restent en mer la nuit.',loot:'encre alchimique',boss:true},
+  ],
+  terres_brulees:[
+    {name:'Mort-marchant',hp:18,hpMax:18,atk:'mêlée',wpn:'epee',desc:'Un soldat mort qui marche encore',loot:'armure brisée'},
+    {name:'Légion des morts',hp:12,hpMax:12,atk:'meute',wpn:'epee',desc:'Cinq cadavres levés — ne s'arrêtent pas',loot:'armes rouillées',count:5},
+    {name:'Chevalier sans tête',hp:65,hpMax:65,atk:'colosse',wpn:'lance',desc:'Une armure vide — les armes normales l'ignorent presque',loot:'armure de chevalier'},
+    {name:'Démon des cendres',hp:80,hpMax:80,atk:'venin',wpn:'feu',desc:'Une silhouette de feu noir — prenez-le à plusieurs',loot:'cœur de démon',boss:true},
+  ],
+  karath:[
+    {name:'Espion de la cour',hp:22,hpMax:22,atk:'embuscade',wpn:'dague',desc:'Personne ne sait qui il travaille vraiment',loot:'documents secrets'},
+    {name:'Assassin du Conseil',hp:35,hpMax:35,atk:'embuscade',wpn:'dague',desc:'Un tueur professionnel',loot:'dague empoisonnée'},
+    {name:'Garde d'élite',hp:40,hpMax:40,atk:'mêlée',wpn:'epee',desc:'La garde personnelle du Seigneur',loot:'armure lourde'},
+    {name:'Inquisiteur',hp:55,hpMax:55,atk:'mêlée',wpn:'lance',desc:'Il sait ce que vous cachez',loot:'sceau d'inquisiteur'},
+  ],
+};
+
+let activeEnemies={};let enemyCounter=0;
+
+function spawnEnemy(zoneId,tmpl){
+  const id='e'+(++enemyCounter);
+  const e={...tmpl,id,currentHp:tmpl.hp};
+  activeEnemies[id]=e;
+  renderEnemyCard(e);
+  return id;
+}
+
+function renderEnemyCard(e){
+  const log=document.getElementById('story-log');
+  const div=document.createElement('div');
+  div.id='ec-'+e.id;div.className='enemy-card';
+  const pct=Math.round(e.currentHp/e.hpMax*100);
+  const icons={meute:'🐺',charge:'🐗',griffes:'🦁',venin:'🕷',embuscade:'👤',colosse:'💀',terreur:'👁',mêlée:'⚔'};
+  div.innerHTML=`<div class="enemy-card-inner${e.boss?' enemy-boss':''}">
+    <div class="enemy-header">
+      <span class="enemy-icon">${e.boss?'☠':icons[e.atk]||'⚔'}</span>
+      <div class="enemy-info"><div class="enemy-name">${e.name}${e.boss?' ☠':''}</div><div class="enemy-desc">${e.desc}</div></div>
+      <div class="enemy-type-badge">${e.atk}</div>
+    </div>
+    <div class="enemy-hp-wrap">
+      <div class="enemy-hp-label"><span>PV</span><span id="eht-${e.id}">${e.currentHp}/${e.hpMax}</span></div>
+      <div class="enemy-hp-bar-bg"><div class="enemy-hp-bar-fill" id="ehb-${e.id}" style="width:${pct}%;background:${pct>50?'#8b1515':pct>25?'#8b4010':'#3a0808'}"></div></div>
+    </div>
+    <div class="enemy-footer"><span style="color:var(--ink3)">Attaque: ${e.atk} · ${e.wpn}</span><span style="color:var(--gold2)">Butin: ${e.loot}</span></div>
+  </div>`;
+  log.appendChild(div);log.scrollTop=log.scrollHeight;
+}
+
+function updateEnemyHp(id,newHp){
+  const e=activeEnemies[id];if(!e)return;
+  e.currentHp=Math.max(0,newHp);
+  const pct=Math.round(e.currentHp/e.hpMax*100);
+  const bar=document.getElementById('ehb-'+id);const txt=document.getElementById('eht-'+id);
+  if(bar){bar.style.width=pct+'%';bar.style.background=pct>50?'#8b1515':pct>25?'#8b4010':'#3a0808';}
+  if(txt)txt.textContent=e.currentHp+'/'+e.hpMax;
+  if(e.currentHp<=0)killEnemy(id);
+}
+
+function killEnemy(id){
+  const e=activeEnemies[id];if(!e)return;
+  const card=document.getElementById('ec-'+id);if(card)card.style.opacity='0.45';
+  messagesRef.push({type:'loot',text:'<strong>'+e.name+'</strong> est vaincu. Butin: <em>'+e.loot+'</em> — premier arrivé ou concertation.',zone:myZone,ts:Date.now()});
+  delete activeEnemies[id];
+}
+
+function detectEnemyFromDM(txt){
+  const t=txt.toLowerCase();
+  const combatWords=['surgit','apparaît','attaque','fonce','charge','bondit','se dresse','vous fait face','émerge','s'avance','grogne','rugit','siffle'];
+  if(!combatWords.some(w=>t.includes(w)))return;
+  const enemies=ZONE_ENEMIES[myZone]||[];
+  for(const tmpl of enemies){
+    const words=tmpl.name.toLowerCase().split(' ');
+    if(words.some(w=>w.length>3&&t.includes(w))){
+      spawnEnemy(myZone,tmpl);return;
+    }
+  }
+}
+
+function detectEnemyDamage(txt){
+  const patterns=[
+    /(?:l'ennemi|le monstre|il|elle|la créature|l'adversaire)(?:s+w+)?s+perd[s]?s+(d+)s*(?:points?s*(?:des*)?)?(pv|hp|vie)/i,
+    /inflige[s]?s+(d+)s*(?:points?s*(?:des*)?)?(dégâts?|dommages?)s*(?:à|sur)?s*(?:l'ennemi|le monstre|lui|elle)/i,
+  ];
+  for(const p of patterns){
+    const m=txt.match(p);
+    if(m){
+      const dmg=parseInt(m[1]);
+      const firstId=Object.keys(activeEnemies)[0];
+      if(firstId)updateEnemyHp(firstId,activeEnemies[firstId].currentHp-dmg);
+      break;
+    }
+  }
 }
 
 async function dmIntro(){
